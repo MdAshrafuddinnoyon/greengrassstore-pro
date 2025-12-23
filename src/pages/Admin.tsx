@@ -43,6 +43,8 @@ import { ImageURLChecker } from "@/components/admin/ImageURLChecker";
 import { SocialAuthManager } from "@/components/admin/SocialAuthManager";
 import { CheckoutSettingsManager } from "@/components/admin/CheckoutSettingsManager";
 import { BackupManager } from "@/components/admin/BackupManager";
+import { SEOManager } from "@/components/admin/SEOManager";
+
 const Admin = () => {
   const navigate = useNavigate();
   const { isAdmin, isLoading, checkRole, canAccessAdmin } = useAdminStore();
@@ -157,6 +159,8 @@ const Admin = () => {
         return <VIPManager />;
       case "social":
         return <SocialIntegrationManager />;
+      case "seo":
+        return <SEOManager />;
       case "settings":
         return (
           <Tabs defaultValue="general" className="space-y-6">

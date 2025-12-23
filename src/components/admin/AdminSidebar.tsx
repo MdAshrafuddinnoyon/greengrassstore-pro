@@ -28,7 +28,8 @@ import {
   PanelLeft,
   Share2,
   Crown,
-  LogOut
+  LogOut,
+  Search
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -69,6 +70,7 @@ const contentNavItems: NavItem[] = [
 const settingsNavItems: NavItem[] = [
   { id: "vip", label: "VIP Program", icon: Crown },
   { id: "social", label: "Social", icon: Share2 },
+  { id: "seo", label: "SEO & Indexing", icon: Search },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
