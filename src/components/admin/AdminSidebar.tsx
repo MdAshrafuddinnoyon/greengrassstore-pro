@@ -29,9 +29,7 @@ import {
   Share2,
   Crown,
   LogOut,
-  Search,
-  Bot,
-  RotateCcw
+  Search
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -55,7 +53,6 @@ const mainNavItems: NavItem[] = [
   { id: "blog", label: "Blog", icon: FileText },
   { id: "subscribers", label: "Subscribers", icon: MessageSquare },
   { id: "requests", label: "Custom Requests", icon: MessageSquare },
-  { id: "returns", label: "Returns", icon: RotateCcw },
 ];
 
 const contentNavItems: NavItem[] = [
@@ -74,7 +71,6 @@ const settingsNavItems: NavItem[] = [
   { id: "vip", label: "VIP Program", icon: Crown },
   { id: "social", label: "Social", icon: Share2 },
   { id: "seo", label: "SEO & Indexing", icon: Search },
-  { id: "chatbot", label: "AI Chatbot", icon: Bot },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 

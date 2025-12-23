@@ -45,8 +45,6 @@ import { CheckoutSettingsManager } from "@/components/admin/CheckoutSettingsMana
 import { BackupManager } from "@/components/admin/BackupManager";
 import { SEOManager } from "@/components/admin/SEOManager";
 import { QuickActionsPanel } from "@/components/admin/QuickActionsPanel";
-import { ChatbotManager } from "@/components/admin/ChatbotManager";
-import { ReturnRequestsManager } from "@/components/admin/ReturnRequestsManager";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -142,8 +140,6 @@ const Admin = () => {
         return <SubscribersManager />;
       case "requests":
         return <CustomRequestsManager />;
-      case "returns":
-        return <ReturnRequestsManager />;
       case "media":
         return <MediaLibrary />;
       case "announcements":
@@ -173,8 +169,6 @@ const Admin = () => {
         return <SocialIntegrationManager />;
       case "seo":
         return <SEOManager />;
-      case "chatbot":
-        return <ChatbotManager />;
       case "settings":
         return (
           <Tabs defaultValue="general" className="space-y-6">

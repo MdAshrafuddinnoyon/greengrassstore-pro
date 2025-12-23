@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, MessageSquare, Bot, Store, Save, RefreshCw, Truck, RotateCcw, CreditCard, MapPin, Plus, Trash2, Percent } from "lucide-react";
+import { ChatbotManager } from "./ChatbotManager";
 
 interface WhatsAppSettings {
   phone: string;
@@ -328,102 +329,9 @@ export const SiteSettingsManager = () => {
           </Card>
         </TabsContent>
 
-        {/* Sales Agent Settings */}
+        {/* Sales Agent Settings - AI Chatbot */}
         <TabsContent value="sales-agent">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bot className="w-5 h-5 text-primary" />
-                Sales Agent Settings
-              </CardTitle>
-              <CardDescription>
-                Configure the AI-powered sales assistant chatbot
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Enable Sales Agent</Label>
-                  <p className="text-sm text-muted-foreground">Show sales assistant chat</p>
-                </div>
-                <Switch
-                  checked={salesAgentSettings.enabled}
-                  onCheckedChange={(checked) => 
-                    setSalesAgentSettings(prev => ({ ...prev, enabled: checked }))
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="agent-name">Agent Name</Label>
-                <Input
-                  id="agent-name"
-                  value={salesAgentSettings.name}
-                  onChange={(e) => 
-                    setSalesAgentSettings(prev => ({ ...prev, name: e.target.value }))
-                  }
-                  placeholder="Sales Assistant"
-                />
-              </div>
-
-              <div className="p-4 bg-muted/50 rounded-lg">
-                <h4 className="font-medium mb-2">Custom Responses</h4>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Add custom keyword-based responses for the sales agent
-                </p>
-                
-                <div className="space-y-3">
-                  {Object.entries(salesAgentSettings.responses).map(([keyword, response], index) => (
-                    <div key={index} className="grid grid-cols-3 gap-2">
-                      <Input 
-                        value={keyword} 
-                        placeholder="Keyword"
-                        onChange={(e) => {
-                          const newResponses = { ...salesAgentSettings.responses };
-                          delete newResponses[keyword];
-                          newResponses[e.target.value] = response;
-                          setSalesAgentSettings(prev => ({ ...prev, responses: newResponses }));
-                        }}
-                      />
-                      <Input 
-                        value={response} 
-                        placeholder="Response"
-                        className="col-span-2"
-                        onChange={(e) => {
-                          setSalesAgentSettings(prev => ({
-                            ...prev,
-                            responses: { ...prev.responses, [keyword]: e.target.value }
-                          }));
-                        }}
-                      />
-                    </div>
-                  ))}
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setSalesAgentSettings(prev => ({
-                        ...prev,
-                        responses: { ...prev.responses, '': '' }
-                      }));
-                    }}
-                  >
-                    Add Response
-                  </Button>
-                </div>
-              </div>
-
-              <Button 
-                onClick={() => saveSettings('sales_agent', salesAgentSettings)}
-                disabled={saving}
-                className="w-full"
-              >
-                {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Save Sales Agent Settings
-              </Button>
-            </CardContent>
-          </Card>
+          <ChatbotManager />
         </TabsContent>
 
         {/* Store Info */}
