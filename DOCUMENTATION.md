@@ -736,6 +736,86 @@ npm run build
 | 1.3.0 | 2024 | Social login integration |
 | 1.4.0 | 2024 | Checkout customization |
 | 1.5.0 | 2024 | Trust badges, Email templates |
+| 1.6.0 | 2024 | Custom Requests Chat System |
+| 1.7.0 | 2024 | WebP Image Optimization |
+| 1.8.0 | 2024 | Backup & Restore System |
+| 1.9.0 | 2024 | Real-time Dashboard Analytics |
+
+---
+
+## New Features (v1.6.0 - v1.9.0)
+
+### Custom Requests Chat System (v1.6.0)
+
+The admin dashboard now includes a messaging system for customer requests:
+
+- **Admin-Customer Chat**: Real-time messaging between admin and customers
+- **Refund/Return Requests**: Separate tab for handling refund requests
+- **Status Tracking**: Track request status (pending, approved, in_progress, completed)
+- **Message History**: Full conversation history saved with each request
+
+#### How to Use:
+1. Go to Admin → Custom Requests
+2. Click on a request to view details
+3. Use the chat button to communicate with customers
+4. Approve requests to enable customer chat
+
+### WebP Image Optimization (v1.7.0)
+
+Automatic image optimization for better performance:
+
+- **Auto-Conversion**: PNG/JPG images automatically converted to WebP
+- **Size Reduction**: Typically 40-60% smaller file sizes
+- **Toggle Control**: Enable/disable optimization in Media Library
+- **Bulk Optimization**: Convert existing images to WebP
+- **Optimization Stats**: View before/after size comparisons
+
+#### Settings:
+1. Go to Admin → Media Library
+2. Toggle "WebP Auto-Optimization" on/off
+3. Upload images - they're automatically optimized
+4. Use "Bulk Optimize" for existing images
+
+### Backup & Restore System (v1.8.0)
+
+Complete data backup and restore functionality:
+
+- **Full Export**: Export all products, orders, profiles, settings as JSON
+- **Selective Backup**: Choose which data to include
+- **Easy Restore**: Import backup files to restore data
+- **Admin Only**: Secure access for administrators only
+
+#### Edge Functions:
+| Function | Purpose |
+|----------|---------|
+| `backup-data` | Export/Import all store data |
+| `optimize-image` | WebP conversion and optimization |
+
+#### How to Backup:
+1. Go to Admin → Settings → Backup
+2. Click "Export Data"
+3. JSON file downloads with all store data
+
+#### How to Restore:
+1. Go to Admin → Settings → Backup
+2. Upload your backup JSON file
+3. Click "Import Data"
+4. Data is restored to database
+
+### Real-time Dashboard Analytics (v1.9.0)
+
+Enhanced dashboard with live statistics and charts:
+
+- **Real-time Updates**: Stats update automatically via Supabase subscriptions
+- **Revenue Tracking**: Total revenue, today's revenue, trends
+- **Order Analytics**: 7-day order charts, status distribution
+- **Live Indicators**: See "Live" badges on real-time sections
+
+#### Charts Included:
+- **Revenue Trend**: Line chart showing 7-day revenue
+- **Order Status**: Pie chart of order status distribution
+- **Daily Orders**: Bar chart of orders per day
+- **Quick Stats**: Cards for revenue, orders, products, users
 
 ---
 
