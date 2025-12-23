@@ -8,13 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Pencil, Trash2, Eye, Loader2, FolderPlus, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, Loader2, FolderPlus, Search, User, Image, Link } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MediaPicker } from "./MediaPicker";
 import { ExportButtons } from "./ExportButtons";
 import { RichTextEditor } from "./RichTextEditor";
 import { AIContentGenerator } from "./AIContentGenerator";
+import { Switch } from "@/components/ui/switch";
 
 interface BlogPost {
   id: string;
@@ -56,6 +57,9 @@ export const BlogManager = () => {
     featured_image: "",
     author_name: "Green Grass Team",
     reading_time: 5,
+    sidebar_banner_image: "",
+    sidebar_banner_link: "",
+    sidebar_banner_enabled: false,
   });
 
   const fetchPosts = async () => {
@@ -175,6 +179,9 @@ export const BlogManager = () => {
       featured_image: post.featured_image || "",
       author_name: post.author_name,
       reading_time: post.reading_time,
+      sidebar_banner_image: (post as any).sidebar_banner_image || "",
+      sidebar_banner_link: (post as any).sidebar_banner_link || "",
+      sidebar_banner_enabled: (post as any).sidebar_banner_enabled || false,
     });
     setIsDialogOpen(true);
   };
@@ -268,6 +275,9 @@ export const BlogManager = () => {
       featured_image: "",
       author_name: "Green Grass Team",
       reading_time: 5,
+      sidebar_banner_image: "",
+      sidebar_banner_link: "",
+      sidebar_banner_enabled: false,
     });
   };
 
@@ -416,13 +426,69 @@ export const BlogManager = () => {
                     </div>
                   </div>
 
-                  <MediaPicker
-                    label="Featured Image"
-                    value={formData.featured_image}
-                    onChange={(url) => setFormData({ ...formData, featured_image: url })}
-                    placeholder="Select or enter image URL"
-                    folder="blog"
-                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <MediaPicker
+                      label="Featured Image"
+                      value={formData.featured_image}
+                      onChange={(url) => setFormData({ ...formData, featured_image: url })}
+                      placeholder="Select or enter image URL"
+                      folder="blog"
+                    />
+                    <div className="space-y-2">
+                      <Label htmlFor="author_name" className="flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        Author Name
+                      </Label>
+                      <Input
+                        id="author_name"
+                        value={formData.author_name}
+                        onChange={(e) => setFormData({ ...formData, author_name: e.target.value })}
+                        placeholder="Enter author name"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Sidebar Banner Ad Section */}
+                  <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Image className="w-5 h-5 text-primary" />
+                        <div>
+                          <Label className="text-base font-medium">Sidebar Banner Ad</Label>
+                          <p className="text-xs text-muted-foreground">Add a promotional banner to this blog post</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={formData.sidebar_banner_enabled}
+                        onCheckedChange={(checked) => setFormData({ ...formData, sidebar_banner_enabled: checked })}
+                      />
+                    </div>
+                    
+                    {formData.sidebar_banner_enabled && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                        <MediaPicker
+                          label="Banner Image (Square)"
+                          value={formData.sidebar_banner_image}
+                          onChange={(url) => setFormData({ ...formData, sidebar_banner_image: url })}
+                          placeholder="Select banner image"
+                          folder="banners"
+                        />
+                        <div className="space-y-2">
+                          <Label htmlFor="sidebar_banner_link" className="flex items-center gap-2">
+                            <Link className="w-4 h-4" />
+                            Banner Link URL
+                          </Label>
+                          <Input
+                            id="sidebar_banner_link"
+                            value={formData.sidebar_banner_link}
+                            onChange={(e) => setFormData({ ...formData, sidebar_banner_link: e.target.value })}
+                            placeholder="https://example.com/product"
+                          />
+                          <p className="text-xs text-muted-foreground">Where should the banner link to?</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
                   <div className="flex justify-end gap-2 pt-4">
                     <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
