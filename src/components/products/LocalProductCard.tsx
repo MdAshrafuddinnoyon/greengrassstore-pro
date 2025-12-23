@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ShoppingCart, Heart, Eye, Tag, Sparkles, Percent, GitCompare } from "lucide-react";
+import { ShoppingCart, Heart, Eye, Tag, Sparkles, Percent, GitCompare, ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartStore } from "@/stores/cartStore";
 import { useWishlistStore } from "@/stores/wishlistStore";
@@ -38,6 +38,7 @@ interface LocalProductCardProps {
 export const LocalProductCard = ({ product, isArabic = false }: LocalProductCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [showQuickView, setShowQuickView] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const addItem = useCartStore(state => state.addItem);
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlistStore();
   const { addItem: addToCompare, removeItem: removeFromCompare, isInCompare } = useCompareStore();
@@ -49,7 +50,7 @@ export const LocalProductCard = ({ product, isArabic = false }: LocalProductCard
     : 0;
 
   const displayName = isArabic && product.name_ar ? product.name_ar : product.name;
-  const displayImage = product.featured_image || product.images?.[0] || '/placeholder.svg';
+  const displayImage = product.featured_image || product.images?.[0] || '';
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -122,15 +123,24 @@ export const LocalProductCard = ({ product, isArabic = false }: LocalProductCard
     >
       <Link to={`/product/${product.slug}`}>
         {/* Image Container - Fixed height */}
-        <div className="relative aspect-[4/5] overflow-hidden bg-muted/30">
-          <img
-            src={displayImage}
-            alt={displayName}
-            className={cn(
-              "w-full h-full object-cover transition-transform duration-500",
-              isHovered && "scale-110"
-            )}
-          />
+        <div className="relative aspect-[4/5] overflow-hidden bg-muted/50">
+          {!imageError && displayImage ? (
+            <img
+              src={displayImage}
+              alt={displayName}
+              className={cn(
+                "w-full h-full object-cover transition-transform duration-500",
+                isHovered && "scale-110"
+              )}
+              loading="lazy"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-muted/30">
+              <ImageOff className="w-12 h-12 text-muted-foreground/40 mb-2" />
+              <span className="text-xs text-muted-foreground/60">No Image</span>
+            </div>
+          )}
           
           {/* Badges */}
           <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1.5 sm:gap-2 z-10">
