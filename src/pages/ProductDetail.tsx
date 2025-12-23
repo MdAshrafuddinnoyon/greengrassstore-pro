@@ -8,7 +8,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Minus, Plus, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, ChevronRight, Check, GitCompare } from "lucide-react";
+import { Loader2, Minus, Plus, ShoppingCart, Heart, Share2, Truck, Shield, RotateCcw, ChevronRight, Check, GitCompare, ImageOff } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -89,6 +89,7 @@ const ProductDetail = () => {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { branding } = useSiteSettings();
   const addItem = useCartStore((state) => state.addItem);
@@ -346,15 +347,17 @@ const ProductDetail = () => {
             >
               {/* Main Image */}
               <div className="relative aspect-square bg-muted rounded-2xl overflow-hidden mb-4">
-                {allImages.length > 0 ? (
+                {allImages.length > 0 && !imageErrors[selectedImageIndex] ? (
                   <img
                     src={allImages[selectedImageIndex]}
                     alt={product.name}
                     className="w-full h-full object-cover"
+                    onError={() => setImageErrors(prev => ({ ...prev, [selectedImageIndex]: true }))}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                    No image
+                  <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground bg-muted/50">
+                    <ImageOff className="w-16 h-16 mb-3 opacity-40" />
+                    <span className="text-sm">{isArabic ? 'لا توجد صورة' : 'No image available'}</span>
                   </div>
                 )}
                 
@@ -388,11 +391,18 @@ const ProductDetail = () => {
                           : "border-transparent hover:border-border"
                       }`}
                     >
-                      <img
-                        src={img}
-                        alt={`${product.name} ${idx + 1}`}
-                        className="w-full h-full object-cover"
-                      />
+                      {!imageErrors[idx] ? (
+                        <img
+                          src={img}
+                          alt={`${product.name} ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={() => setImageErrors(prev => ({ ...prev, [idx]: true }))}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-muted/50">
+                          <ImageOff className="w-6 h-6 text-muted-foreground/40" />
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>

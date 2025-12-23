@@ -97,22 +97,22 @@ const Admin = () => {
     switch (activeTab) {
       case "overview":
         return (
-          <Tabs defaultValue="analytics" className="space-y-6">
+          <Tabs defaultValue="dashboard" className="space-y-6">
             <TabsList className="bg-muted/50 p-1">
-              <TabsTrigger value="analytics" className="gap-2">
-                📊 Analytics Report
-              </TabsTrigger>
               <TabsTrigger value="dashboard" className="gap-2">
                 📋 Dashboard Overview
               </TabsTrigger>
+              <TabsTrigger value="analytics" className="gap-2">
+                📊 Analytics Report
+              </TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="analytics" className="m-0">
-              <AnalyticsReport />
-            </TabsContent>
             
             <TabsContent value="dashboard" className="m-0">
               <DashboardOverview onNavigate={setActiveTab} />
+            </TabsContent>
+            
+            <TabsContent value="analytics" className="m-0">
+              <AnalyticsReport />
             </TabsContent>
           </Tabs>
         );
