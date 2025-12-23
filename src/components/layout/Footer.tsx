@@ -39,41 +39,68 @@ const getFeatureIconColor = (iconName: string) => {
   }
 };
 
+interface PaymentBannerSettings {
+  enabled: boolean;
+  title: string;
+  titleAr: string;
+  images: string[];
+  imageHeight: number;
+}
+
 export const Footer = () => {
   const { t, language } = useLanguage();
   const { footer, branding, themeColors } = useSiteSettings();
   const isArabic = language === "ar";
   const [email, setEmail] = useState("");
   const [footerFeatures, setFooterFeatures] = useState<FooterFeature[]>([]);
+  const [paymentBanner, setPaymentBanner] = useState<PaymentBannerSettings | null>(null);
 
-  // Fetch footer features from database
+  // Fetch footer features and payment banner from database
   useEffect(() => {
-    const fetchFooterFeatures = async () => {
+    const fetchFooterSettings = async () => {
       try {
-        const { data } = await supabase
+        // Fetch footer features
+        const { data: featuresData } = await supabase
           .from('site_settings')
           .select('setting_value')
           .eq('setting_key', 'footer_features')
           .single();
 
-        if (data?.setting_value) {
-          setFooterFeatures(data.setting_value as unknown as FooterFeature[]);
+        if (featuresData?.setting_value) {
+          setFooterFeatures(featuresData.setting_value as unknown as FooterFeature[]);
+        }
+
+        // Fetch footer menu settings (includes payment banner)
+        const { data: menuData } = await supabase
+          .from('site_settings')
+          .select('setting_value')
+          .eq('setting_key', 'footer_menu')
+          .single();
+
+        if (menuData?.setting_value) {
+          const menuSettings = menuData.setting_value as any;
+          if (menuSettings.paymentBanner) {
+            setPaymentBanner(menuSettings.paymentBanner);
+          }
         }
       } catch (error) {
-        console.error('Error fetching footer features:', error);
+        console.error('Error fetching footer settings:', error);
       }
     };
 
-    fetchFooterFeatures();
+    fetchFooterSettings();
 
     // Real-time subscription
     const channel = supabase
-      .channel('footer-features-realtime')
+      .channel('footer-settings-realtime')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'site_settings', filter: "setting_key=eq.footer_features" },
-        () => {
-          fetchFooterFeatures();
+        { event: '*', schema: 'public', table: 'site_settings' },
+        (payload) => {
+          const key = (payload.new as any)?.setting_key;
+          if (key === 'footer_features' || key === 'footer_menu') {
+            fetchFooterSettings();
+          }
         }
       )
       .subscribe();
@@ -291,8 +318,28 @@ export const Footer = () => {
               )}
             </div>
 
-            {/* Payment Methods Banner */}
-            {footer.paymentMethods?.enabled && footer.paymentMethods?.images?.length > 0 && (
+            {/* Payment Methods Banner - Dynamic from FooterMenuManager */}
+            {paymentBanner?.enabled && paymentBanner?.images?.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-white/10">
+                <p className="text-xs text-gray-500 mb-2">
+                  {isArabic ? paymentBanner.titleAr : paymentBanner.title || "Payment Methods"}
+                </p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {paymentBanner.images.map((img, i) => (
+                    <img 
+                      key={i} 
+                      src={img} 
+                      alt="Payment method" 
+                      style={{ height: `${paymentBanner.imageHeight || 24}px` }}
+                      className="object-contain"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Fallback to context payment methods if no database settings */}
+            {!paymentBanner?.enabled && footer.paymentMethods?.enabled && footer.paymentMethods?.images?.length > 0 && (
               <div className="mt-4 pt-4 border-t border-white/10">
                 <p className="text-xs text-gray-500 mb-2">Payment Methods</p>
                 <div className="flex items-center gap-2 flex-wrap">

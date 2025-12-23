@@ -6,8 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Save, Plus, Trash2, GripVertical, Link2, ExternalLink } from "lucide-react";
+import { Loader2, Save, Plus, Trash2, GripVertical, Link2, ExternalLink, CreditCard, Image, Info } from "lucide-react";
 import { MediaPicker } from "./MediaPicker";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 
 interface FooterLink {
   id: string;
@@ -40,11 +42,21 @@ interface FooterMenuSettings {
     whatsapp: string;
     twitter: string;
     youtube: string;
+    tiktok: string;
+    linkedin: string;
+    telegram: string;
   };
   developerCredit: {
     enabled: boolean;
     name: string;
     url: string;
+  };
+  paymentBanner: {
+    enabled: boolean;
+    title: string;
+    titleAr: string;
+    images: string[];
+    imageHeight: number;
   };
 }
 
@@ -115,12 +127,22 @@ const defaultSettings: FooterMenuSettings = {
     facebook: "https://www.facebook.com/greengrassstore",
     whatsapp: "+971547751901",
     twitter: "",
-    youtube: ""
+    youtube: "",
+    tiktok: "",
+    linkedin: "",
+    telegram: ""
   },
   developerCredit: {
     enabled: true,
     name: "Web Search BD",
     url: "https://www.websearchbd.com"
+  },
+  paymentBanner: {
+    enabled: true,
+    title: "Payment Methods",
+    titleAr: "طرق الدفع",
+    images: [],
+    imageHeight: 24
   }
 };
 
@@ -526,6 +548,167 @@ export const FooterMenuManager = () => {
               </CardContent>
             </Card>
           ))}
+        </CardContent>
+      </Card>
+
+      {/* Payment Banner Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="w-5 h-5 text-primary" />
+            Payment Methods Banner
+          </CardTitle>
+          <CardDescription>
+            Display payment method icons in footer
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
+            <div>
+              <Label>Enable Payment Banner</Label>
+              <p className="text-sm text-muted-foreground">Show payment methods in footer</p>
+            </div>
+            <Switch
+              checked={settings.paymentBanner?.enabled ?? true}
+              onCheckedChange={(checked) => 
+                setSettings(prev => ({
+                  ...prev,
+                  paymentBanner: { ...prev.paymentBanner, enabled: checked }
+                }))
+              }
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Banner Title (EN)</Label>
+              <Input
+                value={settings.paymentBanner?.title || "Payment Methods"}
+                onChange={(e) => setSettings(prev => ({
+                  ...prev,
+                  paymentBanner: { ...prev.paymentBanner, title: e.target.value }
+                }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Banner Title (AR)</Label>
+              <Input
+                value={settings.paymentBanner?.titleAr || "طرق الدفع"}
+                onChange={(e) => setSettings(prev => ({
+                  ...prev,
+                  paymentBanner: { ...prev.paymentBanner, titleAr: e.target.value }
+                }))}
+                dir="rtl"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Image Height (px)</Label>
+            <div className="flex items-center gap-4">
+              <Input
+                type="number"
+                min={16}
+                max={80}
+                value={settings.paymentBanner?.imageHeight || 24}
+                onChange={(e) => setSettings(prev => ({
+                  ...prev,
+                  paymentBanner: { ...prev.paymentBanner, imageHeight: parseInt(e.target.value) || 24 }
+                }))}
+                className="w-32"
+              />
+              <p className="text-sm text-muted-foreground">Recommended: 24-32px</p>
+            </div>
+          </div>
+
+          {/* Image Size Guidelines */}
+          <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/20">
+            <div className="flex items-start gap-2">
+              <Info className="w-5 h-5 text-blue-600 mt-0.5" />
+              <div>
+                <h4 className="font-medium text-blue-700 mb-1">Payment Icon Size Guidelines</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• <strong>Recommended Size:</strong> 80×50 px (PNG with transparent background)</li>
+                  <li>• <strong>Max Width:</strong> 100px per icon</li>
+                  <li>• <strong>Format:</strong> PNG or SVG with transparency</li>
+                  <li>• <strong>Examples:</strong> Visa, Mastercard, PayPal, Apple Pay, etc.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Payment Images */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Payment Method Icons</Label>
+              <Badge variant="outline">{settings.paymentBanner?.images?.length || 0} icons</Badge>
+            </div>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {(settings.paymentBanner?.images || []).map((img, idx) => (
+                <div key={idx} className="relative group border rounded-lg p-2 bg-muted/30">
+                  <img 
+                    src={img} 
+                    alt={`Payment ${idx + 1}`} 
+                    className="w-full h-12 object-contain"
+                  />
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute -top-2 -right-2 w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => {
+                      setSettings(prev => ({
+                        ...prev,
+                        paymentBanner: {
+                          ...prev.paymentBanner,
+                          images: prev.paymentBanner.images.filter((_, i) => i !== idx)
+                        }
+                      }));
+                    }}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
+              
+              {/* Add New Payment Icon */}
+              <div className="border-2 border-dashed rounded-lg p-2 flex flex-col items-center justify-center min-h-[60px]">
+                <MediaPicker
+                  value=""
+                  onChange={(url) => {
+                    if (url) {
+                      setSettings(prev => ({
+                        ...prev,
+                        paymentBanner: {
+                          ...prev.paymentBanner,
+                          images: [...(prev.paymentBanner?.images || []), url]
+                        }
+                      }));
+                    }
+                  }}
+                  folder="payment-icons"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Preview */}
+          {settings.paymentBanner?.enabled && settings.paymentBanner?.images?.length > 0 && (
+            <div className="p-4 bg-gray-900 rounded-lg">
+              <p className="text-xs text-gray-500 mb-2">{settings.paymentBanner.title || "Payment Methods"}</p>
+              <div className="flex items-center gap-2 flex-wrap">
+                {settings.paymentBanner.images.map((img, i) => (
+                  <img 
+                    key={i} 
+                    src={img} 
+                    alt="Payment" 
+                    style={{ height: `${settings.paymentBanner.imageHeight || 24}px` }}
+                    className="object-contain"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
