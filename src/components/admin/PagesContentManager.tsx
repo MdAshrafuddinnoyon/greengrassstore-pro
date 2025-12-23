@@ -12,8 +12,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { 
   Loader2, Save, Plus, Trash2, HelpCircle, RotateCcw, 
   Shield, Scale, Building2, Phone, FolderOpen, ChevronDown,
-  MapPin, Mail, Clock, Link, Instagram, Facebook, MessageCircle
+  MapPin, Mail, Clock, Link, Instagram, Facebook, MessageCircle, ShoppingBag
 } from "lucide-react";
+import { ProductDetailSettingsManager } from "./ProductDetailSettingsManager";
 
 interface FAQItem {
   id: string;
@@ -496,6 +497,10 @@ export const PagesContentManager = () => {
           <TabsTrigger value="contact" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
             <Phone className="w-4 h-4" />
             <span className="hidden sm:inline">Contact</span>
+          </TabsTrigger>
+          <TabsTrigger value="product-detail" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <ShoppingBag className="w-4 h-4" />
+            <span className="hidden sm:inline">Product Detail</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1379,6 +1384,11 @@ export const PagesContentManager = () => {
               </Button>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Product Detail Tab */}
+        <TabsContent value="product-detail">
+          <ProductDetailSettingsManager />
         </TabsContent>
       </Tabs>
     </div>
