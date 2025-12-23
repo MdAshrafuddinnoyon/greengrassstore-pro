@@ -82,11 +82,11 @@ export const FeaturedCategorySection = () => {
           cat.parent_id === null && cat.display_order <= 10
         );
         
-        // If specific categories are selected in admin, filter to only those
+        // If specific categories are selected in admin, filter and order them
         if (selectedCategories.length > 0) {
-          mainCategories = mainCategories.filter(cat => 
-            selectedCategories.includes(cat.id)
-          );
+          mainCategories = selectedCategories
+            .map(id => mainCategories.find(cat => cat.id === id))
+            .filter(Boolean) as typeof mainCategories;
         }
         
         mainCategories = mainCategories.slice(0, categoriesLimit);
@@ -105,12 +105,13 @@ export const FeaturedCategorySection = () => {
           ];
         });
 
-        // Get products from Supabase
+        // Get products from Supabase - get featured products first
         const { data: products, error: prodError } = await supabase
           .from('products')
           .select('*')
           .eq('is_active', true)
-          .limit(100);
+          .order('is_featured', { ascending: false })
+          .limit(150);
 
         if (prodError) throw prodError;
 
@@ -162,7 +163,7 @@ export const FeaturedCategorySection = () => {
       }
     };
     loadData();
-  }, []);
+  }, [featuredCategorySection]);
 
   if (loading) {
     return (

@@ -917,22 +917,22 @@ export const OrdersManager = () => {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-12">
+                    <TableHead className="w-10 md:w-12">
                       <Checkbox 
                         checked={selectedIds.length === paginatedOrders.length && paginatedOrders.length > 0}
                         onCheckedChange={toggleSelectAll}
                       />
                     </TableHead>
-                    <TableHead>Order #</TableHead>
-                    <TableHead>Customer</TableHead>
+                    <TableHead className="min-w-[90px]">Order #</TableHead>
+                    <TableHead className="min-w-[120px]">Customer</TableHead>
                     <TableHead>Total</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="hidden sm:table-cell">Status</TableHead>
+                    <TableHead className="hidden md:table-cell">Date</TableHead>
+                    <TableHead className="text-right w-20">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -951,8 +951,8 @@ export const OrdersManager = () => {
                           <p className="text-xs text-muted-foreground">{order.customer_email}</p>
                         </div>
                       </TableCell>
-                      <TableCell className="font-semibold">AED {order.total.toFixed(2)}</TableCell>
-                      <TableCell>
+                      <TableCell className="font-semibold whitespace-nowrap">AED {order.total.toFixed(2)}</TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <Select
                           value={order.status}
                           onValueChange={(value) => updateOrderStatus(order.id, value)}
@@ -971,7 +971,7 @@ export const OrdersManager = () => {
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell className="text-sm">
+                      <TableCell className="hidden md:table-cell text-sm whitespace-nowrap">
                         {format(new Date(order.created_at), 'MMM dd, yyyy')}
                       </TableCell>
                       <TableCell className="text-right">

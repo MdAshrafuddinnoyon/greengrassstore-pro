@@ -826,13 +826,13 @@ Please confirm my order. Thank you!`;
 
                   {/* Payment & Security Banner (Dynamic) */}
                   {branding?.showPaymentBanner && branding?.paymentBannerImage && (
-                    <div className="mb-4">
+                    <div className="mt-4 mb-2">
                       {branding.paymentBannerLink ? (
                         <a href={branding.paymentBannerLink} target="_blank" rel="noopener noreferrer">
-                          <img src={branding.paymentBannerImage} alt="Payment Methods" className="w-full rounded-lg" />
+                          <img src={branding.paymentBannerImage} alt="Payment Methods" className="w-full rounded-lg border" />
                         </a>
                       ) : (
-                        <img src={branding.paymentBannerImage} alt="Payment Methods" className="w-full rounded-lg" />
+                        <img src={branding.paymentBannerImage} alt="Payment Methods" className="w-full rounded-lg border" />
                       )}
                     </div>
                   )}

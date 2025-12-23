@@ -825,26 +825,26 @@ export const ProductManager = () => {
               </div>
             )}
             
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-12">
+                    <TableHead className="w-10 md:w-12">
                       <Checkbox 
                         checked={selectedIds.length === paginatedProducts.length && paginatedProducts.length > 0}
                         onCheckedChange={toggleSelectAll}
                       />
                     </TableHead>
-                    <TableHead>Image</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead className="hidden lg:table-cell">Description</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Category</TableHead>
+                    <TableHead className="w-14 md:w-auto">Image</TableHead>
+                    <TableHead className="min-w-[120px]">Name</TableHead>
+                    <TableHead className="hidden xl:table-cell">Description</TableHead>
+                    <TableHead className="hidden md:table-cell">Type</TableHead>
+                    <TableHead className="hidden sm:table-cell">Category</TableHead>
                     <TableHead>Price</TableHead>
-                    <TableHead className="hidden md:table-cell">Discount</TableHead>
-                    <TableHead>Stock</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="hidden lg:table-cell">Discount</TableHead>
+                    <TableHead className="hidden sm:table-cell">Stock</TableHead>
+                    <TableHead className="hidden md:table-cell">Status</TableHead>
+                    <TableHead className="w-20">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -899,12 +899,12 @@ export const ProductManager = () => {
                             }}
                           />
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <Badge variant={p.product_type === 'variable' ? 'default' : 'outline'}>
                             {p.product_type === 'variable' ? `Variable (${p.variants?.length || 0})` : 'Simple'}
                           </Badge>
                         </TableCell>
-                        <TableCell><Badge variant="outline">{p.category}</Badge></TableCell>
+                        <TableCell className="hidden sm:table-cell"><Badge variant="outline">{p.category}</Badge></TableCell>
                         <TableCell>
                           <InlineEditableCell
                             value={p.price.toString()}
@@ -920,12 +920,12 @@ export const ProductManager = () => {
                             prefix={p.currency + " "}
                           />
                         </TableCell>
-                        <TableCell className="hidden md:table-cell">
+                        <TableCell className="hidden lg:table-cell">
                           {discountPct > 0 ? (
                             <Badge className="bg-red-100 text-red-800">{discountPct}% OFF</Badge>
                           ) : '-'}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           <InlineEditableCell
                             value={p.stock_quantity.toString()}
                             type="number"
@@ -939,7 +939,7 @@ export const ProductManager = () => {
                             }}
                           />
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <div className="flex gap-1 flex-wrap">
                             <Badge variant={p.is_active ? "default" : "secondary"}>
                               {p.is_active ? 'Active' : 'Inactive'}
