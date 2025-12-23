@@ -42,6 +42,7 @@ import { UnifiedEmailManager } from "@/components/admin/UnifiedEmailManager";
 import { ImageURLChecker } from "@/components/admin/ImageURLChecker";
 import { SocialAuthManager } from "@/components/admin/SocialAuthManager";
 import { CheckoutSettingsManager } from "@/components/admin/CheckoutSettingsManager";
+import { BackupManager } from "@/components/admin/BackupManager";
 const Admin = () => {
   const navigate = useNavigate();
   const { isAdmin, isLoading, checkRole, canAccessAdmin } = useAdminStore();
@@ -157,6 +158,7 @@ const Admin = () => {
               <TabsTrigger value="social-auth" className="text-xs sm:text-sm">Social Login</TabsTrigger>
               <TabsTrigger value="images" className="text-xs sm:text-sm">Image Checker</TabsTrigger>
               <TabsTrigger value="smtp" className="text-xs sm:text-sm">SMTP</TabsTrigger>
+              <TabsTrigger value="backup" className="text-xs sm:text-sm">Backup</TabsTrigger>
             </TabsList>
             
             <TabsContent value="general" className="m-0">
@@ -201,6 +203,10 @@ const Admin = () => {
             
             <TabsContent value="smtp" className="m-0">
               <SMTPSettingsManager />
+            </TabsContent>
+
+            <TabsContent value="backup" className="m-0">
+              <BackupManager />
             </TabsContent>
             
           </Tabs>

@@ -115,6 +115,7 @@ export const HomepageSectionsManager = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [categories, setCategories] = useState<{id: string, name: string}[]>([]);
+  const [allCategories, setAllCategories] = useState<{id: string, name: string}[]>([]);
 
   const [categoryGridSettings, setCategoryGridSettings] = useState<CategoryGridSettings>({
     displayCount: 10,
@@ -206,15 +207,18 @@ export const HomepageSectionsManager = () => {
   const fetchSettings = async () => {
     setLoading(true);
     try {
-      // Fetch only main categories (parent_id is null) for featured section
-      const { data: catData } = await supabase
+      // Fetch ALL active categories for Category Grid
+      const { data: allCatData } = await supabase
         .from('categories')
         .select('id, name, slug, parent_id')
         .eq('is_active', true)
-        .is('parent_id', null)
         .order('display_order');
       
-      if (catData) setCategories(catData);
+      if (allCatData) setAllCategories(allCatData);
+
+      // Fetch only main categories (parent_id is null) for featured section
+      const parentCategories = allCatData?.filter(cat => cat.parent_id === null) || [];
+      setCategories(parentCategories);
 
       const { data, error } = await supabase
         .from('site_settings')
@@ -257,15 +261,17 @@ export const HomepageSectionsManager = () => {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'categories' },
         () => {
-          // Refetch categories when any category changes
+          // Refetch all categories when any category changes
           supabase
             .from('categories')
             .select('id, name, slug, parent_id')
             .eq('is_active', true)
-            .is('parent_id', null)
             .order('display_order')
             .then(({ data }) => {
-              if (data) setCategories(data);
+              if (data) {
+                setAllCategories(data);
+                setCategories(data.filter(cat => cat.parent_id === null));
+              }
             });
         }
       )
@@ -633,26 +639,30 @@ export const HomepageSectionsManager = () => {
 
               <div className="space-y-2">
                 <Label>Select Categories to Display</Label>
-                <p className="text-xs text-muted-foreground mb-2">Leave empty to show all categories</p>
+                <p className="text-xs text-muted-foreground mb-2">Leave empty to show all categories. All active categories are shown here.</p>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-60 overflow-y-auto p-2 border rounded-lg">
-                  {categories.map((cat) => (
-                    <label key={cat.id} className="flex items-center gap-2 p-2 rounded hover:bg-muted/50 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={categoryGridSettings.selectedCategoryIds?.includes(cat.id) || false}
-                        onChange={(e) => {
-                          setCategoryGridSettings(prev => ({
-                            ...prev,
-                            selectedCategoryIds: e.target.checked
-                              ? [...(prev.selectedCategoryIds || []), cat.id]
-                              : (prev.selectedCategoryIds || []).filter(id => id !== cat.id)
-                          }));
-                        }}
-                        className="rounded"
-                      />
-                      <span className="text-sm">{cat.name}</span>
-                    </label>
-                  ))}
+                  {allCategories.length === 0 ? (
+                    <p className="text-sm text-muted-foreground col-span-full py-4 text-center">No categories found. Create categories first.</p>
+                  ) : (
+                    allCategories.map((cat) => (
+                      <label key={cat.id} className="flex items-center gap-2 p-2 rounded hover:bg-muted/50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={categoryGridSettings.selectedCategoryIds?.includes(cat.id) || false}
+                          onChange={(e) => {
+                            setCategoryGridSettings(prev => ({
+                              ...prev,
+                              selectedCategoryIds: e.target.checked
+                                ? [...(prev.selectedCategoryIds || []), cat.id]
+                                : (prev.selectedCategoryIds || []).filter(id => id !== cat.id)
+                            }));
+                          }}
+                          className="rounded"
+                        />
+                        <span className="text-sm">{cat.name}</span>
+                      </label>
+                    ))
+                  )}
                 </div>
               </div>
 
