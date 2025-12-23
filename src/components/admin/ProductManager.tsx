@@ -1076,14 +1076,14 @@ export const ProductManager = () => {
                 <div className="space-y-2">
                   <Label>Subcategory</Label>
                   <Select
-                    value={editingProduct?.subcategory || ''}
-                    onValueChange={(v) => setEditingProduct(p => ({ ...p, subcategory: v }))}
+                    value={editingProduct?.subcategory || '_none_'}
+                    onValueChange={(v) => setEditingProduct(p => ({ ...p, subcategory: v === '_none_' ? '' : v }))}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select subcategory" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="_none_">None</SelectItem>
                       {getSubcategories(editingProduct?.category || '').map(c => (
                         <SelectItem key={c.id} value={c.slug}>{c.name}</SelectItem>
                       ))}
