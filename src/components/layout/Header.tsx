@@ -177,7 +177,9 @@ export const Header = () => {
                   target.src = logo;
                 }}
               />
-              <span className="text-[10px] text-gray-500">www.greengrassstore.com</span>
+              {(branding.showDomainText ?? true) && branding.domainText && (
+                <span className="text-[10px] text-gray-500">{branding.domainText}</span>
+              )}
             </Link>
 
             {/* Right Actions */}
