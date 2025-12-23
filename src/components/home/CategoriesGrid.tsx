@@ -86,6 +86,7 @@ const getIconForCategory = (handle: string, title: string): typeof Leaf => {
 
 interface CategoryGridSettings {
   displayCount: number;
+  displayCountMobile: number;
   autoplaySpeed: number;
   showArrows: boolean;
   imageScale: number;
@@ -96,12 +97,22 @@ export const CategoriesGrid = () => {
   const isArabic = language === 'ar';
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const [settings, setSettings] = useState<CategoryGridSettings>({
     displayCount: 10,
+    displayCountMobile: 6,
     autoplaySpeed: 3000,
     showArrows: true,
     imageScale: 1
   });
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { 
@@ -147,8 +158,9 @@ export const CategoriesGrid = () => {
     loadCategories();
   }, []);
 
-  // Map categories to display data with dynamic icons - limit by settings
-  const displayCategories = categories.slice(0, settings.displayCount).map((category) => {
+  // Map categories to display data with dynamic icons - limit by settings based on device
+  const displayLimit = isMobile ? (settings.displayCountMobile || 6) : settings.displayCount;
+  const displayCategories = categories.slice(0, displayLimit).map((category) => {
     const isSale = category.slug === "sale" || category.slug.includes("sale");
     
     return {
@@ -237,17 +249,18 @@ export const CategoriesGrid = () => {
                     >
                       {/* Icon Circle or Image */}
                       <div 
-                        className="relative rounded-full bg-[#f8f8f5] group-hover/item:bg-primary/10 border border-border/50 group-hover/item:border-primary/30 flex items-center justify-center transition-all duration-300 group-hover/item:scale-105 group-hover/item:shadow-lg overflow-hidden"
+                        className="relative rounded-full bg-[#f8f8f5] group-hover/item:bg-primary/10 border border-border/50 group-hover/item:border-primary/30 flex items-center justify-center transition-all duration-300 group-hover/item:shadow-lg overflow-hidden"
                         style={{
                           width: `${Math.round(80 * settings.imageScale)}px`,
                           height: `${Math.round(80 * settings.imageScale)}px`,
+                          transform: 'translateY(0)',
                         }}
                       >
                         {category.image ? (
                           <img 
                             src={category.image} 
                             alt={category.name}
-                            className="w-full h-full object-cover transition-transform duration-300"
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover/item:scale-105"
                           />
                         ) : (
                           <IconComponent className="w-6 h-6 md:w-8 md:h-8 text-foreground/70 group-hover/item:text-primary transition-colors duration-300" />

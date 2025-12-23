@@ -416,62 +416,37 @@ export default function Shop() {
 
             {/* Main Content */}
             <div className="flex-1 min-w-0">
-              {/* Top Bar */}
-              <div className="bg-background rounded-xl shadow-sm p-4 mb-6">
-              {/* Mobile-optimized layout */}
-              <div className="flex flex-col gap-3">
-                {/* Search - Full width on mobile */}
-                <form onSubmit={handleSearch} className="w-full">
-                  <div className="relative">
-                    <input
-                      id="shop-search-input"
-                      type="text"
-                      placeholder={isArabic ? "البحث حسب الاسم، الفئة..." : "Search by name, category..."}
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-4 pr-12 py-2.5 sm:py-3 bg-muted border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    />
-                    <button 
-                      type="submit"
-                      disabled={isSearching}
-                      className="absolute right-1.5 top-1.5 bottom-1.5 px-3 sm:px-4 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
-                    >
-                      {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                    </button>
-                  </div>
-                </form>
-
-                {/* Filter & Sort Row - Compact on mobile */}
-                <div className="flex items-center gap-2 sm:gap-3">
-                  {/* Mobile Filter Button */}
-                  <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
-                    <SheetTrigger asChild>
-                      <button className="lg:hidden flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-muted rounded-xl text-xs sm:text-sm font-medium hover:bg-muted/80 transition-colors">
-                        <SlidersHorizontal className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        <span className="hidden xs:inline">{isArabic ? "فلترة" : "Filters"}</span>
-                        {activeFiltersCount > 0 && (
-                          <span className="px-1.5 py-0.5 bg-primary text-primary-foreground rounded-full text-[10px] sm:text-xs min-w-[18px] text-center">
-                            {activeFiltersCount}
-                          </span>
-                        )}
+              {/* Top Bar - Improved responsive design */}
+              <div className="bg-background rounded-xl shadow-sm p-3 md:p-4 mb-6">
+                {/* Desktop layout - all in one row */}
+                <div className="hidden md:flex items-center gap-3">
+                  {/* Search */}
+                  <form onSubmit={handleSearch} className="flex-1 max-w-md">
+                    <div className="relative">
+                      <input
+                        id="shop-search-input"
+                        type="text"
+                        placeholder={isArabic ? "البحث..." : "Search products..."}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-4 pr-10 py-2.5 bg-muted border-0 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      />
+                      <button 
+                        type="submit"
+                        disabled={isSearching}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                       </button>
-                    </SheetTrigger>
-                    <SheetContent side="left" className="w-[280px] sm:w-[320px] p-0">
-                      <SheetHeader className="p-3 sm:p-4 border-b">
-                        <SheetTitle className="text-base sm:text-lg">{isArabic ? "فلترة" : "Filters"}</SheetTitle>
-                      </SheetHeader>
-                      <div className="p-3 sm:p-4 overflow-y-auto max-h-[calc(100vh-80px)]">
-                        <FilterSidebar />
-                      </div>
-                    </SheetContent>
-                  </Sheet>
+                    </div>
+                  </form>
 
-                  {/* Sort - Compact on mobile */}
-                  <div className="relative flex-1 sm:flex-none">
+                  {/* Sort Dropdown */}
+                  <div className="relative">
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="w-full sm:w-auto appearance-none bg-muted px-3 sm:px-4 py-2 sm:py-2.5 pr-8 sm:pr-10 rounded-xl text-xs sm:text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      className="appearance-none bg-muted px-4 py-2.5 pr-10 rounded-lg text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20"
                     >
                       {sortOptions.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -479,29 +454,94 @@ export default function Shop() {
                         </option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                   </div>
 
-                    {/* Grid View Toggle - Desktop only */}
-                    <div className="hidden md:flex items-center border border-border rounded-xl p-1 bg-muted/50">
-                      <button
-                        onClick={() => setGridView("large")}
-                        className={`p-2 rounded-lg transition-colors ${
-                          gridView === "large" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-background"
-                        }`}
-                        aria-label="Large grid view"
+                  {/* Grid View Toggle */}
+                  <div className="flex items-center border border-border rounded-lg p-1 bg-muted/50">
+                    <button
+                      onClick={() => setGridView("large")}
+                      className={`p-2 rounded-md transition-colors ${
+                        gridView === "large" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-background"
+                      }`}
+                      aria-label="Large grid view"
+                    >
+                      <LayoutGrid className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setGridView("small")}
+                      className={`p-2 rounded-md transition-colors ${
+                        gridView === "small" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-background"
+                      }`}
+                      aria-label="Small grid view"
+                    >
+                      <Grid3X3 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mobile layout - stacked */}
+                <div className="md:hidden space-y-3">
+                  {/* Search - Full width */}
+                  <form onSubmit={handleSearch} className="w-full">
+                    <div className="relative">
+                      <input
+                        id="shop-search-input-mobile"
+                        type="text"
+                        placeholder={isArabic ? "البحث..." : "Search..."}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-4 pr-10 py-2.5 bg-muted border-0 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      />
+                      <button 
+                        type="submit"
+                        disabled={isSearching}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-primary transition-colors"
                       >
-                        <LayoutGrid className="w-4 h-4" />
+                        {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                       </button>
-                      <button
-                        onClick={() => setGridView("small")}
-                        className={`p-2 rounded-lg transition-colors ${
-                          gridView === "small" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-background"
-                        }`}
-                        aria-label="Small grid view"
+                    </div>
+                  </form>
+
+                  {/* Filter & Sort Row */}
+                  <div className="flex items-center gap-2">
+                    {/* Mobile Filter Button */}
+                    <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+                      <SheetTrigger asChild>
+                        <button className="flex items-center gap-1.5 px-3 py-2 bg-muted rounded-lg text-xs font-medium hover:bg-muted/80 transition-colors">
+                          <SlidersHorizontal className="w-3.5 h-3.5" />
+                          <span>{isArabic ? "فلترة" : "Filters"}</span>
+                          {activeFiltersCount > 0 && (
+                            <span className="px-1.5 py-0.5 bg-primary text-primary-foreground rounded-full text-[10px] min-w-[18px] text-center">
+                              {activeFiltersCount}
+                            </span>
+                          )}
+                        </button>
+                      </SheetTrigger>
+                      <SheetContent side="left" className="w-[280px] sm:w-[320px] p-0">
+                        <SheetHeader className="p-3 border-b">
+                          <SheetTitle className="text-base">{isArabic ? "فلترة" : "Filters"}</SheetTitle>
+                        </SheetHeader>
+                        <div className="p-3 overflow-y-auto max-h-[calc(100vh-80px)]">
+                          <FilterSidebar />
+                        </div>
+                      </SheetContent>
+                    </Sheet>
+
+                    {/* Sort Dropdown - Flex grow */}
+                    <div className="relative flex-1">
+                      <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value)}
+                        className="w-full appearance-none bg-muted px-3 py-2 pr-8 rounded-lg text-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20"
                       >
-                        <Grid3X3 className="w-4 h-4" />
-                      </button>
+                        {sortOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
                     </div>
                   </div>
                 </div>

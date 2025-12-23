@@ -85,12 +85,16 @@ const InlineEditableCell = ({
   value, 
   onSave, 
   type = "text",
-  prefix = ""
+  prefix = "",
+  multiline = false,
+  className = ""
 }: { 
   value: string; 
   onSave: (value: string) => Promise<void>; 
   type?: "text" | "number";
   prefix?: string;
+  multiline?: boolean;
+  className?: string;
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
@@ -115,7 +119,8 @@ const InlineEditableCell = ({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleSave();
+    if (e.key === 'Enter' && !multiline) handleSave();
+    if (e.key === 'Enter' && multiline && e.ctrlKey) handleSave();
     if (e.key === 'Escape') {
       setEditValue(value);
       setIsEditing(false);
@@ -124,18 +129,31 @@ const InlineEditableCell = ({
 
   if (isEditing) {
     return (
-      <div className="flex items-center gap-1">
+      <div className="flex items-start gap-1">
         {prefix && <span className="text-muted-foreground text-sm">{prefix}</span>}
-        <Input
-          type={type}
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          onBlur={handleSave}
-          onKeyDown={handleKeyDown}
-          className="h-8 w-24 text-sm"
-          autoFocus
-          disabled={saving}
-        />
+        {multiline ? (
+          <Textarea
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={handleSave}
+            onKeyDown={handleKeyDown}
+            className="min-h-[60px] text-sm"
+            autoFocus
+            disabled={saving}
+            placeholder="Enter description..."
+          />
+        ) : (
+          <Input
+            type={type}
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={handleSave}
+            onKeyDown={handleKeyDown}
+            className="h-8 w-24 text-sm"
+            autoFocus
+            disabled={saving}
+          />
+        )}
       </div>
     );
   }
@@ -143,10 +161,10 @@ const InlineEditableCell = ({
   return (
     <div
       onClick={() => { setIsEditing(true); setEditValue(value); }}
-      className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors font-medium min-w-[60px]"
+      className={`cursor-pointer hover:bg-muted/50 px-2 py-1 rounded transition-colors font-medium min-w-[60px] ${className}`}
       title="Click to edit"
     >
-      {prefix}{value}
+      {prefix}{value || <span className="text-muted-foreground italic text-xs">Click to add</span>}
     </div>
   );
 };
@@ -819,10 +837,11 @@ export const ProductManager = () => {
                     </TableHead>
                     <TableHead>Image</TableHead>
                     <TableHead>Name</TableHead>
+                    <TableHead className="hidden lg:table-cell">Description</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Price</TableHead>
-                    <TableHead>Discount</TableHead>
+                    <TableHead className="hidden md:table-cell">Discount</TableHead>
                     <TableHead>Stock</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
@@ -865,6 +884,21 @@ export const ProductManager = () => {
                             }}
                           />
                         </TableCell>
+                        <TableCell className="hidden lg:table-cell max-w-[200px]">
+                          <InlineEditableCell
+                            value={p.description || ''}
+                            multiline
+                            className="text-xs text-muted-foreground line-clamp-2"
+                            onSave={async (newValue) => {
+                              const { error } = await supabase
+                                .from('products')
+                                .update({ description: newValue })
+                                .eq('id', p.id);
+                              if (error) throw error;
+                              fetchProducts();
+                            }}
+                          />
+                        </TableCell>
                         <TableCell>
                           <Badge variant={p.product_type === 'variable' ? 'default' : 'outline'}>
                             {p.product_type === 'variable' ? `Variable (${p.variants?.length || 0})` : 'Simple'}
@@ -886,7 +920,7 @@ export const ProductManager = () => {
                             prefix={p.currency + " "}
                           />
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           {discountPct > 0 ? (
                             <Badge className="bg-red-100 text-red-800">{discountPct}% OFF</Badge>
                           ) : '-'}

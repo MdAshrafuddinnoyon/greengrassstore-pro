@@ -68,7 +68,6 @@ export const BlogManager = () => {
       console.error("Error fetching posts:", error);
     } else {
       setPosts(data || []);
-      // Extract unique categories from posts
       const postCategories = [...new Set((data || []).map(p => p.category))];
       setCategories([...new Set([...DEFAULT_CATEGORIES, ...postCategories])]);
     }

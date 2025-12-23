@@ -101,6 +101,7 @@ interface InstagramSectionSettings {
 
 interface CategoryGridSettings {
   displayCount: number;
+  displayCountMobile: number;
   autoplaySpeed: number;
   showArrows: boolean;
   imageScale: number;
@@ -114,6 +115,7 @@ export const HomepageSectionsManager = () => {
 
   const [categoryGridSettings, setCategoryGridSettings] = useState<CategoryGridSettings>({
     displayCount: 10,
+    displayCountMobile: 6,
     autoplaySpeed: 3000,
     showArrows: true,
     imageScale: 1,
@@ -484,9 +486,9 @@ export const HomepageSectionsManager = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div className="space-y-2">
-                  <Label>Display Count</Label>
+                  <Label>Desktop Display Count</Label>
                   <Input
                     type="number"
                     min="1"
@@ -494,7 +496,18 @@ export const HomepageSectionsManager = () => {
                     value={categoryGridSettings.displayCount}
                     onChange={(e) => setCategoryGridSettings(prev => ({ ...prev, displayCount: parseInt(e.target.value) || 10 }))}
                   />
-                  <p className="text-xs text-muted-foreground">How many categories to show</p>
+                  <p className="text-xs text-muted-foreground">Categories on desktop</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Mobile Display Count</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="12"
+                    value={categoryGridSettings.displayCountMobile || 6}
+                    onChange={(e) => setCategoryGridSettings(prev => ({ ...prev, displayCountMobile: parseInt(e.target.value) || 6 }))}
+                  />
+                  <p className="text-xs text-muted-foreground">Categories on mobile</p>
                 </div>
                 <div className="space-y-2">
                   <Label>Autoplay Speed (ms)</Label>
@@ -506,7 +519,7 @@ export const HomepageSectionsManager = () => {
                     value={categoryGridSettings.autoplaySpeed}
                     onChange={(e) => setCategoryGridSettings(prev => ({ ...prev, autoplaySpeed: parseInt(e.target.value) || 3000 }))}
                   />
-                  <p className="text-xs text-muted-foreground">Rotation speed in milliseconds</p>
+                  <p className="text-xs text-muted-foreground">Rotation speed</p>
                 </div>
                 <div className="space-y-2">
                   <Label>Image Scale</Label>
