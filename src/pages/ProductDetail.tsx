@@ -658,34 +658,93 @@ const ProductDetail = () => {
                 {isArabic ? 'اطلب عبر واتساب' : 'Order via WhatsApp'}
               </button>
 
-              {/* Payment Banner (Dynamic) */}
-              {branding?.showPaymentBanner && branding?.paymentBannerImage && (
-                <div className="pt-2">
-                  {branding.paymentBannerLink ? (
-                    <a href={branding.paymentBannerLink} target="_blank" rel="noopener noreferrer">
-                      <img src={branding.paymentBannerImage} alt="Payment Methods" className="w-full rounded-lg" />
-                    </a>
-                  ) : (
-                    <img src={branding.paymentBannerImage} alt="Payment Methods" className="w-full rounded-lg" />
+              {/* Trust Badges Section */}
+              {pageSettings?.showTrustBadges !== false && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-4 border-t border-b border-border">
+                  {pageSettings?.trustBadges?.filter(b => b.enabled).map((badge) => {
+                    const iconMap: Record<string, React.ReactNode> = {
+                      'truck': <Truck className="w-5 h-5" />,
+                      'shield': <Shield className="w-5 h-5" />,
+                      'rotate': <RotateCcw className="w-5 h-5" />,
+                      'check': <Check className="w-5 h-5" />,
+                    };
+                    return (
+                      <div key={badge.id} className="flex flex-col items-center text-center p-2">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-1.5">
+                          {iconMap[badge.icon] || <Check className="w-5 h-5" />}
+                        </div>
+                        <span className="text-xs font-medium text-foreground">
+                          {isArabic ? badge.titleAr : badge.title}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {isArabic ? badge.subtitleAr : badge.subtitle}
+                        </span>
+                      </div>
+                    );
+                  }) || (
+                    // Default badges if no custom badges set
+                    <>
+                      <div className="flex flex-col items-center text-center p-2">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-1.5">
+                          <Truck className="w-5 h-5" />
+                        </div>
+                        <span className="text-xs font-medium text-foreground">
+                          {isArabic ? 'توصيل مجاني' : 'Free Delivery'}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {isArabic ? 'للطلبات فوق 200 درهم' : 'On orders over AED 200'}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center text-center p-2">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-1.5">
+                          <Shield className="w-5 h-5" />
+                        </div>
+                        <span className="text-xs font-medium text-foreground">
+                          {isArabic ? 'دفع آمن' : 'Secure Payment'}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {isArabic ? '100% مضمون' : '100% Protected'}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center text-center p-2">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-1.5">
+                          <RotateCcw className="w-5 h-5" />
+                        </div>
+                        <span className="text-xs font-medium text-foreground">
+                          {isArabic ? 'إرجاع سهل' : 'Easy Returns'}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {isArabic ? 'خلال 7 أيام' : 'Within 7 Days'}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center text-center p-2">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-1.5">
+                          <Check className="w-5 h-5" />
+                        </div>
+                        <span className="text-xs font-medium text-foreground">
+                          {isArabic ? 'جودة عالية' : 'Top Quality'}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {isArabic ? 'منتجات أصلية' : 'Original Products'}
+                        </span>
+                      </div>
+                    </>
                   )}
                 </div>
               )}
 
-              {/* Secure Payment & Easy Return (Dynamic) */}
-              <div className="flex flex-col md:flex-row gap-2 mb-4">
-                {branding?.showSecurePayment && (
-                  <div className="flex items-center gap-2 text-green-700 text-xs bg-green-50 px-2 py-1 rounded">
-                    <Shield className="w-4 h-4" />
-                    {isArabic ? branding?.securePaymentTextAr : branding?.securePaymentText}
-                  </div>
-                )}
-                {branding?.showEasyReturn && (
-                  <div className="flex items-center gap-2 text-amber-700 text-xs bg-amber-50 px-2 py-1 rounded">
-                    <RotateCcw className="w-4 h-4" />
-                    {isArabic ? branding?.easyReturnTextAr : branding?.easyReturnText}
-                  </div>
-                )}
-              </div>
+              {/* Payment Banner (Dynamic) */}
+              {pageSettings?.showPaymentBanner && pageSettings?.paymentBannerImage && (
+                <div className="pt-2">
+                  {pageSettings.paymentBannerLink ? (
+                    <a href={pageSettings.paymentBannerLink} target="_blank" rel="noopener noreferrer">
+                      <img src={pageSettings.paymentBannerImage} alt="Payment Methods" className="w-full rounded-lg" />
+                    </a>
+                  ) : (
+                    <img src={pageSettings.paymentBannerImage} alt="Payment Methods" className="w-full rounded-lg" />
+                  )}
+                </div>
+              )}
             </motion.div>
           </div>
         </div>

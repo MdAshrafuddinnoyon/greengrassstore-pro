@@ -41,6 +41,7 @@ import { VIPManager } from "@/components/admin/VIPManager";
 import { UnifiedEmailManager } from "@/components/admin/UnifiedEmailManager";
 import { ImageURLChecker } from "@/components/admin/ImageURLChecker";
 import { SocialAuthManager } from "@/components/admin/SocialAuthManager";
+import { CheckoutSettingsManager } from "@/components/admin/CheckoutSettingsManager";
 const Admin = () => {
   const navigate = useNavigate();
   const { isAdmin, isLoading, checkRole, canAccessAdmin } = useAdminStore();
@@ -149,6 +150,7 @@ const Admin = () => {
               <TabsTrigger value="users" className="text-xs sm:text-sm">Users & Roles</TabsTrigger>
               <TabsTrigger value="email" className="text-xs sm:text-sm">Email Settings</TabsTrigger>
               <TabsTrigger value="payments" className="text-xs sm:text-sm">Payments</TabsTrigger>
+              <TabsTrigger value="checkout" className="text-xs sm:text-sm">Checkout</TabsTrigger>
               <TabsTrigger value="invoice" className="text-xs sm:text-sm">Invoice</TabsTrigger>
               <TabsTrigger value="tracking" className="text-xs sm:text-sm">Tracking</TabsTrigger>
               <TabsTrigger value="api" className="text-xs sm:text-sm">API & Security</TabsTrigger>
@@ -171,6 +173,10 @@ const Admin = () => {
             
             <TabsContent value="payments" className="m-0">
               <PaymentSettingsManager />
+            </TabsContent>
+            
+            <TabsContent value="checkout" className="m-0">
+              <CheckoutSettingsManager />
             </TabsContent>
             
             <TabsContent value="invoice" className="m-0">
