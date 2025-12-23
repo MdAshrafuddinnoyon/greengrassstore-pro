@@ -24,6 +24,9 @@ interface BlogPost {
   view_count: number;
   published_at: string | null;
   created_at: string;
+  sidebar_banner_image?: string | null;
+  sidebar_banner_link?: string | null;
+  sidebar_banner_enabled?: boolean;
 }
 
 export default function BlogDetail() {
@@ -366,6 +369,37 @@ export default function BlogDetail() {
                     {isArabic ? "خبير النباتات" : "Plant Expert"}
                   </p>
                 </motion.div>
+
+                {/* Sidebar Banner Ad */}
+                {post.sidebar_banner_enabled && post.sidebar_banner_image && (
+                  <motion.div 
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.45 }}
+                    className="overflow-hidden rounded-xl sm:rounded-2xl"
+                  >
+                    {post.sidebar_banner_link ? (
+                      <a 
+                        href={post.sidebar_banner_link} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="block group"
+                      >
+                        <img 
+                          src={post.sidebar_banner_image} 
+                          alt="Promotional Banner"
+                          className="w-full aspect-square object-cover rounded-xl sm:rounded-2xl group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </a>
+                    ) : (
+                      <img 
+                        src={post.sidebar_banner_image} 
+                        alt="Promotional Banner"
+                        className="w-full aspect-square object-cover rounded-xl sm:rounded-2xl"
+                      />
+                    )}
+                  </motion.div>
+                )}
 
                 {/* Categories */}
                 <motion.div 
