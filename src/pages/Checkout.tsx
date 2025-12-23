@@ -38,7 +38,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { shippingSettings, branding } = useSiteSettings();
   const { items, updateQuantity, removeItem, clearCart, isLoading } = useCartStore();
-  const [paymentMethod, setPaymentMethod] = useState<"online" | "whatsapp" | "home_delivery">("home_delivery");
+  const [paymentMethod, setPaymentMethod] = useState<"online" | "whatsapp" | "home_delivery" | "bank_transfer">("home_delivery");
   const [guestCheckout, setGuestCheckout] = useState(true);
   const [createAccount, setCreateAccount] = useState(false);
   const [password, setPassword] = useState("");
@@ -70,9 +70,29 @@ const Checkout = () => {
     phoneNumber?: string;
     instructions?: string;
   }
+  
+  interface BankTransferSettings {
+    enabled: boolean;
+    bankName: string;
+    accountName: string;
+    accountNumber: string;
+    iban: string;
+    swiftCode: string;
+    instructions: string;
+  }
+  
   const [codSettings, setCodSettings] = useState<PaymentSettings>({ enabled: true, label: "Cash on Delivery", labelAr: "الدفع عند الاستلام" });
   const [whatsappSettings, setWhatsappSettings] = useState<PaymentSettings>({ enabled: true, phoneNumber: "+971547751901", label: "Order via WhatsApp", labelAr: "اطلب عبر واتساب" });
   const [onlinePaymentEnabled, setOnlinePaymentEnabled] = useState(false);
+  const [bankSettings, setBankSettings] = useState<BankTransferSettings>({
+    enabled: false,
+    bankName: "",
+    accountName: "",
+    accountNumber: "",
+    iban: "",
+    swiftCode: "",
+    instructions: ""
+  });
 
   // Fetch payment settings
   useEffect(() => {
@@ -88,6 +108,7 @@ const Checkout = () => {
         let codEnabled = true;
         let whatsappEnabled = true;
         let onlineEnabled = false;
+        let bankEnabled = false;
 
         data?.forEach((setting) => {
           const value = setting.setting_value as Record<string, unknown>;
@@ -101,6 +122,9 @@ const Checkout = () => {
             if ((value as any).enabled) {
               onlineEnabled = true;
             }
+          } else if (setting.setting_key === 'bank_transfer_settings') {
+            setBankSettings(value as unknown as BankTransferSettings);
+            bankEnabled = (value as any).enabled ?? false;
           }
         });
 
@@ -365,6 +389,69 @@ Please confirm my order. Thank you!`;
       toast.success(isArabic ? "تم تأكيد طلبك! رقم الطلب: " + orderNumber : "Order confirmed! Order #: " + orderNumber);
       clearCart();
       navigate('/thank-you?order=' + orderNumber);
+    } catch (error) {
+      console.error('Error creating order:', error);
+      toast.error(isArabic ? "حدث خطأ في إنشاء الطلب" : "Error creating order");
+    }
+  };
+
+  const handleBankTransferOrder = async () => {
+    if (!customerInfo.name || !customerInfo.phone) {
+      toast.error(isArabic ? "يرجى إدخال الاسم ورقم الهاتف" : "Please enter name and phone number");
+      return;
+    }
+    
+    if (!validatePhoneNumber(customerInfo.phone)) {
+      toast.error(isArabic ? "يرجى إدخال رقم هاتف صحيح" : "Please enter a valid phone number");
+      return;
+    }
+
+    try {
+      const orderNumber = `ORD-${Date.now().toString(36).toUpperCase()}`;
+      const orderItems = items.map(item => {
+        const productInfo = getProductInfo(item.product);
+        return {
+          name: productInfo.name,
+          productId: productInfo.id,
+          options: item.selectedOptions.map(o => o.value).join(', '),
+          quantity: item.quantity,
+          price: parseFloat(item.price.amount),
+          total: parseFloat(item.price.amount) * item.quantity,
+          image: productInfo.featured_image
+        };
+      });
+
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const { error } = await supabase.from('orders').insert({
+        order_number: orderNumber,
+        customer_name: customerInfo.name,
+        customer_email: customerInfo.email || user?.email || '',
+        customer_phone: customerInfo.phone,
+        customer_address: `${customerInfo.address}, ${customerInfo.city}`,
+        items: orderItems,
+        subtotal: subtotal,
+        shipping: shipping,
+        tax: 0,
+        total: total,
+        payment_method: 'bank_transfer',
+        notes: `${customerInfo.notes || ''}\n\nBank Transfer - Pending payment confirmation`,
+        status: 'awaiting_payment',
+        user_id: user?.id || null
+      });
+
+      if (error) throw error;
+
+      if (appliedCoupon) {
+        await supabase
+          .from('discount_coupons')
+          .update({ used_count: (await supabase.from('discount_coupons').select('used_count').eq('id', appliedCoupon.id).single()).data?.used_count + 1 || 1 })
+          .eq('id', appliedCoupon.id);
+      }
+
+      toast.success(isArabic ? "تم إنشاء طلبك! يرجى إتمام التحويل البنكي" : "Order created! Please complete the bank transfer");
+      clearCart();
+      navigate('/thank-you?order=' + orderNumber + '&payment=bank');
     } catch (error) {
       console.error('Error creating order:', error);
       toast.error(isArabic ? "حدث خطأ في إنشاء الطلب" : "Error creating order");
@@ -796,6 +883,52 @@ Please confirm my order. Thank you!`;
                     </label>
                   )}
 
+                  {/* Bank Transfer - only show if enabled */}
+                  {bankSettings.enabled && (
+                    <label 
+                      className={`flex items-start gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all ${
+                        paymentMethod === "bank_transfer" 
+                          ? "border-blue-500 bg-blue-50" 
+                          : "border-border hover:border-muted-foreground/30"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="payment"
+                        checked={paymentMethod === "bank_transfer"}
+                        onChange={() => setPaymentMethod("bank_transfer" as any)}
+                        className="w-4 h-4 text-blue-500 accent-blue-500 mt-0.5"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-blue-600">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <path d="M3 9h18"/>
+                            <path d="M9 21V9"/>
+                          </svg>
+                          <span className="font-medium text-sm">{isArabic ? "تحويل بنكي" : "Bank Transfer"}</span>
+                        </div>
+                        {paymentMethod === "bank_transfer" && bankSettings.bankName && (
+                          <div className="mt-2 p-2 bg-blue-100 rounded-lg text-xs space-y-1">
+                            <p><strong>{isArabic ? "البنك:" : "Bank:"}</strong> {bankSettings.bankName}</p>
+                            <p><strong>{isArabic ? "اسم الحساب:" : "Account Name:"}</strong> {bankSettings.accountName}</p>
+                            <p><strong>{isArabic ? "رقم الحساب:" : "Account No:"}</strong> {bankSettings.accountNumber}</p>
+                            {bankSettings.iban && <p><strong>IBAN:</strong> {bankSettings.iban}</p>}
+                            {bankSettings.swiftCode && <p><strong>SWIFT:</strong> {bankSettings.swiftCode}</p>}
+                            {bankSettings.instructions && (
+                              <p className="text-blue-700 mt-1">{bankSettings.instructions}</p>
+                            )}
+                          </div>
+                        )}
+                        {paymentMethod !== "bank_transfer" && (
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {isArabic ? "تحويل مباشر إلى حسابنا البنكي" : "Direct transfer to our bank account"}
+                          </p>
+                        )}
+                      </div>
+                    </label>
+                  )}
+
                   {/* Terms */}
                   <div className="flex items-start gap-2 pt-2">
                     <input
@@ -842,6 +975,7 @@ Please confirm my order. Thank you!`;
                   <Button
                     onClick={
                       paymentMethod === "home_delivery" ? handleHomeDeliveryOrder :
+                      paymentMethod === "bank_transfer" ? handleBankTransferOrder :
                       handleWhatsAppOrder
                     }
                     disabled={isLoading || !acceptedTerms}
@@ -850,6 +984,8 @@ Please confirm my order. Thank you!`;
                         ? "bg-[#25D366] hover:bg-[#128C7E] text-white"
                         : paymentMethod === "home_delivery"
                         ? "bg-amber-500 hover:bg-amber-600 text-white"
+                        : paymentMethod === "bank_transfer"
+                        ? "bg-blue-600 hover:bg-blue-700 text-white"
                         : "bg-[#2d5a3d] hover:bg-[#234830] text-white"
                     } disabled:opacity-50`}
                   >
@@ -864,6 +1000,11 @@ Please confirm my order. Thank you!`;
                       <>
                         <Truck className="w-4 h-4 mr-2" />
                         {isArabic ? "تأكيد الطلب" : "Confirm Order"}
+                      </>
+                    ) : paymentMethod === "bank_transfer" ? (
+                      <>
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        {isArabic ? "تأكيد وإظهار بيانات البنك" : "Confirm & Show Bank Details"}
                       </>
                     ) : (
                       <>
