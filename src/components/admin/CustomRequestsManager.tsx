@@ -112,28 +112,41 @@ export const CustomRequestsManager = () => {
 
   const fetchRequests = async () => {
     setLoading(true);
-    let query = supabase
-      .from("custom_requirements")
-      .select("*")
-      .order("created_at", { ascending: false });
+    try {
+      let query = supabase
+        .from("custom_requirements")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    if (statusFilter !== "all") {
-      query = query.eq("status", statusFilter);
+      if (statusFilter !== "all") {
+        query = query.eq("status", statusFilter);
+      }
+
+      // Filter by type based on active tab
+      if (activeTab === "refunds") {
+        query = query.or('requirement_type.eq.refund,requirement_type.eq.return,requirement_type.eq.return_request');
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Error fetching custom requests:", error);
+        console.log("Error code:", error.code, "Message:", error.message);
+        // If table doesn't exist, show empty state
+        if (error.code === '42P01' || error.message?.includes('does not exist')) {
+          console.log("Table custom_requirements does not exist - needs to be created in Supabase");
+        }
+        setRequests([]);
+      } else {
+        console.log("Fetched custom requests:", data?.length || 0, "items");
+        setRequests(data || []);
+      }
+    } catch (err) {
+      console.error("Exception fetching requests:", err);
+      setRequests([]);
+    } finally {
+      setLoading(false);
     }
-
-    // Filter by type based on active tab
-    if (activeTab === "refunds") {
-      query = query.or('requirement_type.eq.refund,requirement_type.eq.return');
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error("Error fetching requests:", error);
-    } else {
-      setRequests(data || []);
-    }
-    setLoading(false);
   };
 
   useEffect(() => {
