@@ -94,12 +94,21 @@ export const FeaturedCategorySection = () => {
   }, []);
 
   useEffect(() => {
+    // Don't load data until settings are fetched
+    if (!sectionSettings.enabled) {
+      setLoading(false);
+      return;
+    }
+
     const loadData = async () => {
+      setLoading(true);
       try {
         const categoriesLimit = sectionSettings.categoriesLimit || 4;
         const productsPerCategory = sectionSettings.productsPerCategory || 6;
         const selectedCategories = sectionSettings.selectedCategories || [];
         const adminImages = sectionSettings.images || {};
+
+        console.log('Loading featured categories with settings:', { categoriesLimit, productsPerCategory, selectedCategories });
 
         // Fetch all categories to build parent-child mapping
         const { data: allCategoriesData, error: allCatError } = await supabase
@@ -114,17 +123,24 @@ export const FeaturedCategorySection = () => {
         let mainCategories = (allCategoriesData || []).filter(cat => 
           cat.parent_id === null
         );
+
+        console.log('Available main categories:', mainCategories.map(c => ({ id: c.id, name: c.name, slug: c.slug })));
         
-        // If specific categories are selected in admin, filter and order them
+        // If specific categories are selected in admin, filter and order them by selection order
         if (selectedCategories.length > 0) {
-          mainCategories = selectedCategories
+          const selectedMainCategories = selectedCategories
             .map(id => mainCategories.find(cat => cat.id === id))
             .filter(Boolean) as typeof mainCategories;
+          
+          if (selectedMainCategories.length > 0) {
+            mainCategories = selectedMainCategories;
+          }
+          console.log('Selected categories from admin:', selectedMainCategories.map(c => c.name));
         }
         
         mainCategories = mainCategories.slice(0, categoriesLimit);
 
-        // Build a map of parent categories to their child slugs
+        // Build a map of parent categories to their child slugs for product matching
         const parentToChildSlugs: Record<string, string[]> = {};
         mainCategories.forEach(parent => {
           const children = (allCategoriesData || []).filter(cat => 
@@ -138,17 +154,19 @@ export const FeaturedCategorySection = () => {
           ];
         });
 
-        // Get products from Supabase - get featured products first
+        // Get products from Supabase
         const { data: products, error: prodError } = await supabase
           .from('products')
           .select('*')
           .eq('is_active', true)
           .order('is_featured', { ascending: false })
-          .limit(150);
+          .limit(200);
 
         if (prodError) throw prodError;
 
-        // Map products to parent categories
+        console.log('Total products loaded:', products?.length);
+
+        // Map products to parent categories - show categories even if no products
         const categoriesWithProducts = mainCategories.map((cat) => {
           const categorySlug = cat.slug.toLowerCase();
           const categoryName = cat.name.toLowerCase();
@@ -158,6 +176,7 @@ export const FeaturedCategorySection = () => {
           const matchedProducts = (products || []).filter((product) => {
             const prodCategory = product.category?.toLowerCase() || '';
             const prodSubcategory = product.subcategory?.toLowerCase() || '';
+            const prodTags = (product.tags || []).map((t: string) => t.toLowerCase());
 
             // Check if product matches parent category directly
             if (childSlugs.includes(prodCategory)) return true;
@@ -165,16 +184,25 @@ export const FeaturedCategorySection = () => {
             // Check if product's subcategory matches any child category
             if (prodSubcategory && childSlugs.includes(prodSubcategory)) return true;
 
-            // Special case: match "Pots" parent with products that have "Pot" in category
-            if (categorySlug === 'pots' && prodCategory.includes('pot')) return true;
-            if (categorySlug === 'plants' && prodCategory.includes('plant')) return true;
-            if (categorySlug === 'flowers' && prodCategory.includes('flower')) return true;
+            // Check tags for category match
+            if (prodTags.some((tag: string) => childSlugs.includes(tag))) return true;
+
+            // Flexible matching - check if category slug is contained in product category
+            if (prodCategory.includes(categorySlug) || categorySlug.includes(prodCategory)) return true;
+
+            // Special cases for common category names
+            if (categorySlug.includes('pot') && prodCategory.includes('pot')) return true;
+            if (categorySlug.includes('plant') && prodCategory.includes('plant')) return true;
+            if (categorySlug.includes('flower') && prodCategory.includes('flower')) return true;
+            if (categorySlug.includes('gift') && (prodCategory.includes('gift') || prodTags.includes('gift'))) return true;
 
             return false;
           });
 
           // Use admin-selected image if set, else fallback
           const adminImage = adminImages[cat.id];
+
+          console.log(`Category "${cat.name}" matched ${matchedProducts.length} products`);
 
           return {
             category: {
@@ -186,9 +214,15 @@ export const FeaturedCategorySection = () => {
             },
             products: matchedProducts.slice(0, productsPerCategory),
           };
-        }).filter(cat => cat.products.length > 0);
+        });
 
-        setCategories(categoriesWithProducts);
+        // Show all selected categories, even those without products (with empty array)
+        // But filter out categories with no products for display
+        const displayCategories = categoriesWithProducts.filter(cat => cat.products.length > 0);
+
+        console.log('Final categories to display:', displayCategories.map(c => `${c.category.name} (${c.products.length} products)`));
+
+        setCategories(displayCategories);
       } catch (error) {
         console.error("Failed to fetch featured categories:", error);
       } finally {

@@ -201,11 +201,12 @@ export const HomepageSectionsManager = () => {
   const fetchSettings = async () => {
     setLoading(true);
     try {
-      // Fetch categories
+      // Fetch only main categories (parent_id is null) for featured section
       const { data: catData } = await supabase
         .from('categories')
-        .select('id, name')
+        .select('id, name, slug, parent_id')
         .eq('is_active', true)
+        .is('parent_id', null)
         .order('display_order');
       
       if (catData) setCategories(catData);
