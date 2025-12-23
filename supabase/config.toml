@@ -8,3 +8,9 @@ verify_jwt = true
 
 [functions.send-order-email]
 verify_jwt = false
+
+[functions.optimize-image]
+verify_jwt = false
+
+[functions.backup-data]
+verify_jwt = true
