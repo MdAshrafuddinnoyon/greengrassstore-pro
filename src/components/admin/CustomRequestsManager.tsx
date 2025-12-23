@@ -8,10 +8,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Eye, Loader2, MessageSquare, RefreshCw, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Eye, Loader2, MessageSquare, RefreshCw, Trash2, Send, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ExportButtons } from "./ExportButtons";
 import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Pagination,
   PaginationContent,
@@ -20,6 +22,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CustomRequest {
   id: string;
@@ -42,6 +45,7 @@ export const CustomRequestsManager = () => {
   const [selectedRequest, setSelectedRequest] = useState<CustomRequest | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<"requests" | "refunds">("requests");
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -49,6 +53,62 @@ export const CustomRequestsManager = () => {
 
   // Bulk Selection
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Chat states
+  const [showChatDialog, setShowChatDialog] = useState(false);
+  const [chatRequest, setChatRequest] = useState<CustomRequest | null>(null);
+  const [chatMessages, setChatMessages] = useState<{id: string; message: string; from_admin: boolean; created_at: string}[]>([]);
+  const [newAdminMessage, setNewAdminMessage] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
+
+  // Parse chat messages from admin_notes
+  const parseChatMessages = (adminNotes: string | null) => {
+    if (!adminNotes) return [];
+    return adminNotes.split('\n').filter(Boolean).map((msg, idx) => ({
+      id: idx.toString(),
+      message: msg.replace(/^\[(Admin|Customer)\]: /, ''),
+      from_admin: msg.startsWith('[Admin]:'),
+      created_at: new Date().toISOString()
+    }));
+  };
+
+  // Open chat for a request
+  const openChat = (request: CustomRequest) => {
+    setChatRequest(request);
+    setChatMessages(parseChatMessages(request.admin_notes));
+    setShowChatDialog(true);
+  };
+
+  // Send message as admin
+  const sendAdminMessage = async () => {
+    if (!chatRequest || !newAdminMessage.trim()) return;
+    
+    setSendingMessage(true);
+    try {
+      const currentNotes = chatRequest.admin_notes || '';
+      const updatedNotes = currentNotes 
+        ? `${currentNotes}\n[Admin]: ${newAdminMessage.trim()}`
+        : `[Admin]: ${newAdminMessage.trim()}`;
+      
+      const { error } = await supabase
+        .from('custom_requirements')
+        .update({ admin_notes: updatedNotes })
+        .eq('id', chatRequest.id);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setChatRequest(prev => prev ? { ...prev, admin_notes: updatedNotes } : null);
+      setChatMessages(parseChatMessages(updatedNotes));
+      setNewAdminMessage("");
+      toast.success("Message sent");
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error("Failed to send message");
+    } finally {
+      setSendingMessage(false);
+    }
+  };
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -59,6 +119,11 @@ export const CustomRequestsManager = () => {
 
     if (statusFilter !== "all") {
       query = query.eq("status", statusFilter);
+    }
+
+    // Filter by type based on active tab
+    if (activeTab === "refunds") {
+      query = query.or('requirement_type.eq.refund,requirement_type.eq.return');
     }
 
     const { data, error } = await query;
@@ -89,7 +154,7 @@ export const CustomRequestsManager = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [statusFilter]);
+  }, [statusFilter, activeTab]);
 
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase
@@ -288,6 +353,17 @@ export const CustomRequestsManager = () => {
         </div>
       </CardHeader>
       <CardContent>
+        {/* Tabs for Requests and Refunds */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "requests" | "refunds")} className="mb-4">
+          <TabsList>
+            <TabsTrigger value="requests">All Requests</TabsTrigger>
+            <TabsTrigger value="refunds">
+              <RotateCcw className="w-4 h-4 mr-1" />
+              Refund/Return Requests
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+
         {/* Bulk Actions */}
         {selectedIds.length > 0 && (
           <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg mb-4">
@@ -372,6 +448,15 @@ export const CustomRequestsManager = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
+                          {/* Chat Button */}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => openChat(request)}
+                            title="Open Chat"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                          </Button>
                           <Dialog>
                             <DialogTrigger asChild>
                               <Button
@@ -538,6 +623,76 @@ export const CustomRequestsManager = () => {
           </>
         )}
       </CardContent>
+
+      {/* Chat Dialog */}
+      <Dialog open={showChatDialog} onOpenChange={setShowChatDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquare className="w-5 h-5" />
+              Chat with Customer
+            </DialogTitle>
+          </DialogHeader>
+          {chatRequest && (
+            <div className="space-y-4">
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="font-medium text-sm">{chatRequest.name}</p>
+                <p className="text-xs text-muted-foreground">{chatRequest.email}</p>
+                <p className="text-xs mt-1">{chatRequest.title}</p>
+              </div>
+
+              {/* Messages */}
+              <ScrollArea className="h-[300px] border rounded-lg p-3">
+                {chatMessages.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    No messages yet. Start the conversation!
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {chatMessages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`p-3 rounded-lg max-w-[85%] ${
+                          msg.from_admin
+                            ? 'ml-auto bg-primary text-primary-foreground'
+                            : 'mr-auto bg-muted'
+                        }`}
+                      >
+                        <p className="text-xs font-medium mb-1">
+                          {msg.from_admin ? 'Admin' : 'Customer'}
+                        </p>
+                        <p className="text-sm">{msg.message}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+
+              {/* Message Input */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Type your message..."
+                  value={newAdminMessage}
+                  onChange={(e) => setNewAdminMessage(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      sendAdminMessage();
+                    }
+                  }}
+                />
+                <Button onClick={sendAdminMessage} disabled={sendingMessage || !newAdminMessage.trim()}>
+                  {sendingMessage ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
