@@ -271,6 +271,34 @@ export const FeaturedCategorySection = () => {
   );
 };
 
+// Product Image component with error handling
+const ProductImage = ({ src, alt }: { src: string; alt: string }) => {
+  const [hasError, setHasError] = useState(false);
+  
+  if (hasError || !src) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-muted/30">
+        <div className="w-12 h-12 text-muted-foreground/40 mb-1">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+        </div>
+        <span className="text-[10px] text-muted-foreground/50">No Image</span>
+      </div>
+    );
+  }
+  
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+      loading="lazy"
+      onError={() => setHasError(true)}
+    />
+  );
+};
+
 interface CategoryBannerSliderProps {
   category: {
     id: string;
@@ -377,10 +405,10 @@ const CategoryBannerSlider = ({ category, products, reverse }: CategoryBannerSli
         </div>
 
         {/* Products Carousel */}
-        <div className="overflow-hidden" ref={emblaRef}>
-          <div className="flex gap-4">
+        <div className="overflow-hidden -mx-2" ref={emblaRef}>
+          <div className="flex">
             {products.map((product) => {
-              const displayImage = product.featured_image || product.images?.[0] || '/placeholder.svg';
+              const displayImage = product.featured_image || product.images?.[0] || '';
               const discountPercentage = product.compare_at_price 
                 ? Math.round((1 - product.price / product.compare_at_price) * 100)
                 : 0;
@@ -388,25 +416,25 @@ const CategoryBannerSlider = ({ category, products, reverse }: CategoryBannerSli
               // Defensive: skip if product or product.id is missing
               if (!product || !product.id) return null;
               return (
-                <div key={product.id} className="flex-none w-[170px] md:w-[220px] shrink-0">
+                <div key={product.id} className="flex-none w-[180px] md:w-[230px] px-2">
                   <div className="group block relative">
                     <Link to={`/product/${product.slug}`}
                       className="relative aspect-square rounded-2xl overflow-hidden mb-3 border border-border/20 bg-muted/50 shadow-md group-hover:shadow-xl group-hover:-translate-y-1 transition-all duration-300 block">
-                      <img
-                        src={displayImage}
-                        alt={isArabic && product.name_ar ? product.name_ar : product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          target.parentElement?.classList.add('flex', 'items-center', 'justify-center');
-                          const placeholder = document.createElement('div');
-                          placeholder.className = 'w-16 h-16 bg-muted rounded flex items-center justify-center';
-                          placeholder.innerHTML = '<svg class="w-8 h-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
-                          target.parentElement?.appendChild(placeholder);
-                        }}
-                      />
+                      {displayImage ? (
+                        <ProductImage 
+                          src={displayImage} 
+                          alt={isArabic && product.name_ar ? product.name_ar : product.name} 
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-muted/30">
+                          <div className="w-12 h-12 text-muted-foreground/40 mb-1">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className="w-full h-full">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground/50">No Image</span>
+                        </div>
+                      )}
                       {/* Badges */}
                       <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
                         {product.is_on_sale && discountPercentage > 0 && (
