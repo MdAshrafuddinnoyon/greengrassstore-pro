@@ -7,7 +7,6 @@ import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import { useCartStore } from "@/stores/cartStore";
 import { toast } from "sonner";
 
@@ -53,20 +52,54 @@ interface CategoryWithProducts {
 export const FeaturedCategorySection = () => {
   const [categories, setCategories] = useState<CategoryWithProducts[]>([]);
   const [loading, setLoading] = useState(true);
-  const { featuredCategorySection } = useSiteSettings();
+  const [sectionSettings, setSectionSettings] = useState<{
+    enabled: boolean;
+    categoriesLimit: number;
+    productsPerCategory: number;
+    selectedCategories: string[];
+    images: Record<string, string>;
+  }>({
+    enabled: true,
+    categoriesLimit: 4,
+    productsPerCategory: 6,
+    selectedCategories: [],
+    images: {}
+  });
 
-  // If section is disabled, return null
-  if (!featuredCategorySection.enabled) {
-    return null;
-  }
+  // Load settings from database
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const { data } = await supabase
+          .from('site_settings')
+          .select('setting_value')
+          .eq('setting_key', 'featured_category_section')
+          .single();
+        
+        if (data?.setting_value) {
+          const settings = data.setting_value as any;
+          setSectionSettings({
+            enabled: settings.enabled ?? true,
+            categoriesLimit: settings.categoriesLimit || 4,
+            productsPerCategory: settings.productsPerCategory || 6,
+            selectedCategories: settings.selectedCategories || [],
+            images: settings.images || {}
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load featured category settings:', error);
+      }
+    };
+    loadSettings();
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const categoriesLimit = featuredCategorySection.categoriesLimit || 4;
-        const productsPerCategory = featuredCategorySection.productsPerCategory || 6;
-        const selectedCategories = featuredCategorySection.selectedCategories || [];
-        const adminImages = (featuredCategorySection as any).images || {};
+        const categoriesLimit = sectionSettings.categoriesLimit || 4;
+        const productsPerCategory = sectionSettings.productsPerCategory || 6;
+        const selectedCategories = sectionSettings.selectedCategories || [];
+        const adminImages = sectionSettings.images || {};
 
         // Fetch all categories to build parent-child mapping
         const { data: allCategoriesData, error: allCatError } = await supabase
@@ -77,9 +110,9 @@ export const FeaturedCategorySection = () => {
         
         if (allCatError) throw allCatError;
 
-        // Get only main categories
+        // Get only main categories (parent_id is null)
         let mainCategories = (allCategoriesData || []).filter(cat => 
-          cat.parent_id === null && cat.display_order <= 10
+          cat.parent_id === null
         );
         
         // If specific categories are selected in admin, filter and order them
@@ -163,7 +196,12 @@ export const FeaturedCategorySection = () => {
       }
     };
     loadData();
-  }, [featuredCategorySection]);
+  }, [sectionSettings]);
+
+  // If section is disabled, return null
+  if (!sectionSettings.enabled) {
+    return null;
+  }
 
   if (loading) {
     return (
