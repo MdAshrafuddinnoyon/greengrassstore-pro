@@ -54,7 +54,7 @@ export const MediaLibrary = () => {
   } | null>(null);
   const itemsPerPage = 20;
 
-  const predefinedFolders = ['uploads', 'products', 'blog', 'categories', 'banners', 'logos'];
+  const predefinedFolders = ['uploads', 'products', 'blog', 'categories', 'banners', 'logos', 'digital-products'];
 
   const fetchFiles = useCallback(async () => {
     try {
