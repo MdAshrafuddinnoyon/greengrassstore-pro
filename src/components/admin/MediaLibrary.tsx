@@ -44,6 +44,8 @@ export const MediaLibrary = () => {
   const [moveToFolder, setMoveToFolder] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [webpOptimization, setWebpOptimization] = useState(true);
+  const [bulkOptimizing, setBulkOptimizing] = useState(false);
+  const [bulkOptimizeProgress, setBulkOptimizeProgress] = useState(0);
   const [optimizationStats, setOptimizationStats] = useState<{
     originalSize: number;
     optimizedSize: number;
@@ -357,6 +359,101 @@ export const MediaLibrary = () => {
     }
   };
 
+  // Bulk optimize selected images to WebP
+  const handleBulkOptimize = async () => {
+    const imageFiles = files.filter(f => 
+      selectedFiles.includes(f.id) && 
+      f.file_type.startsWith('image/') && 
+      f.file_type !== 'image/webp'
+    );
+
+    if (imageFiles.length === 0) {
+      toast.error('No optimizable images selected (already WebP or not images)');
+      return;
+    }
+
+    setBulkOptimizing(true);
+    setBulkOptimizeProgress(0);
+    let successCount = 0;
+    let totalOriginal = 0;
+    let totalOptimized = 0;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      for (let i = 0; i < imageFiles.length; i++) {
+        const file = imageFiles[i];
+        setBulkOptimizeProgress(Math.round(((i + 1) / imageFiles.length) * 100));
+
+        try {
+          // Download the file first
+          const { data: fileData, error: downloadError } = await supabase.storage
+            .from('media')
+            .download(file.file_path);
+
+          if (downloadError || !fileData) {
+            console.error(`Failed to download ${file.file_name}:`, downloadError);
+            continue;
+          }
+
+          totalOriginal += file.file_size;
+
+          // Create FormData for optimization
+          const formData = new FormData();
+          formData.append('file', fileData, file.file_name);
+          formData.append('folder', file.folder);
+          formData.append('quality', '80');
+
+          const response = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/optimize-image`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${session?.access_token}`,
+              },
+              body: formData,
+            }
+          );
+
+          const result = await response.json();
+
+          if (result.success) {
+            // Delete old file
+            await supabase.storage.from('media').remove([file.file_path]);
+            await supabase.from('media_files').delete().eq('id', file.id);
+            
+            totalOptimized += result.data.optimizedSize || file.file_size;
+            successCount++;
+          }
+        } catch (err) {
+          console.error(`Error optimizing ${file.file_name}:`, err);
+        }
+      }
+
+      if (successCount > 0) {
+        const savings = totalOriginal - totalOptimized;
+        const savingsPercent = totalOriginal > 0 ? Math.round((savings / totalOriginal) * 100) : 0;
+        setOptimizationStats({
+          originalSize: totalOriginal,
+          optimizedSize: totalOptimized,
+          savings,
+          savingsPercent
+        });
+        toast.success(`Optimized ${successCount} images with ${savingsPercent}% size reduction!`);
+        setSelectedFiles([]);
+        fetchFiles();
+      } else {
+        toast.error('No images were optimized');
+      }
+    } catch (error) {
+      console.error('Bulk optimization error:', error);
+      toast.error('Failed to optimize images');
+    } finally {
+      setBulkOptimizing(false);
+      setBulkOptimizeProgress(0);
+    }
+  };
+
   const toggleSelectFile = (id: string) => {
     setSelectedFiles(prev => 
       prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
@@ -582,6 +679,29 @@ export const MediaLibrary = () => {
       {selectedFiles.length > 0 && (
         <div className="bg-muted/50 rounded-lg p-3 flex flex-wrap items-center gap-2 sm:gap-3">
           <span className="text-xs sm:text-sm font-medium">{selectedFiles.length} selected</span>
+          
+          {/* Bulk Optimize Button */}
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleBulkOptimize}
+            disabled={bulkOptimizing}
+            className="bg-green-50 border-green-200 hover:bg-green-100 text-green-700"
+          >
+            {bulkOptimizing ? (
+              <>
+                <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 animate-spin" />
+                {bulkOptimizeProgress}%
+              </>
+            ) : (
+              <>
+                <Zap className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                <span className="hidden sm:inline">Optimize to WebP</span>
+                <span className="sm:hidden">WebP</span>
+              </>
+            )}
+          </Button>
+          
           <Button 
             variant="outline" 
             size="sm"
