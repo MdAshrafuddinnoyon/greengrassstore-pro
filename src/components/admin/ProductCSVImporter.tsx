@@ -407,6 +407,29 @@ export const ProductCSVImporter = ({ onImportComplete }: ProductCSVImporterProps
     reader.readAsText(file);
   };
 
+  // Helper function to validate and process image URL
+  const processImageUrl = (url: string): string | null => {
+    if (!url || url.trim() === '') return null;
+    const trimmedUrl = url.trim();
+    
+    // Check if it's a valid URL
+    if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) {
+      return trimmedUrl;
+    }
+    
+    // Check if it's a relative path (could be a local file reference)
+    if (trimmedUrl.startsWith('/')) {
+      return trimmedUrl;
+    }
+    
+    // Try to add https:// if it looks like a domain
+    if (trimmedUrl.includes('.') && !trimmedUrl.includes(' ')) {
+      return `https://${trimmedUrl}`;
+    }
+    
+    return null;
+  };
+
   const handleImport = async () => {
     if (csvData.length === 0) {
       toast.error('No products to import');
@@ -432,10 +455,18 @@ export const ProductCSVImporter = ({ onImportComplete }: ProductCSVImporterProps
           }
         }
 
-        // Handle images (pipe-separated or comma-separated)
-        const imagesArray = product.images 
+        // Process featured image URL - ensure it's properly formatted
+        const featuredImageUrl = processImageUrl(product.featured_image || '');
+
+        // Handle gallery images (pipe-separated or comma-separated)
+        // Process each image URL to ensure proper formatting
+        const rawImages = product.images 
           ? product.images.split(/[|,]/).map(img => img.trim()).filter(Boolean)
           : [];
+        
+        const imagesArray = rawImages
+          .map(img => processImageUrl(img))
+          .filter((img): img is string => img !== null);
 
         // Handle tags (comma-separated)
         const tagsArray = product.tags 
@@ -460,7 +491,7 @@ export const ProductCSVImporter = ({ onImportComplete }: ProductCSVImporterProps
           currency: 'AED',
           sku: product.sku || null,
           stock_quantity: parseInt(product.stock_quantity || '10'),
-          featured_image: product.featured_image || null,
+          featured_image: featuredImageUrl,
           images: imagesArray,
           tags: tagsArray,
           is_featured: Boolean(toBool(product.is_featured)),

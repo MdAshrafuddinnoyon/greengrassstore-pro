@@ -268,6 +268,45 @@ export const BlogImporter = ({ onImportComplete }: BlogImporterProps) => {
     reader.readAsText(file);
   };
 
+  // Helper function to validate and process image URL
+  const processImageUrl = (url: string): string | null => {
+    if (!url || url.trim() === '') return null;
+    const trimmedUrl = url.trim();
+    
+    // Check if it's a valid URL
+    if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) {
+      return trimmedUrl;
+    }
+    
+    // Check if it's a relative path
+    if (trimmedUrl.startsWith('/')) {
+      return trimmedUrl;
+    }
+    
+    // Try to add https:// if it looks like a domain
+    if (trimmedUrl.includes('.') && !trimmedUrl.includes(' ')) {
+      return `https://${trimmedUrl}`;
+    }
+    
+    return null;
+  };
+
+  // Extract images from WordPress content
+  const extractImagesFromContent = (content: string): string[] => {
+    const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*>/gi;
+    const images: string[] = [];
+    let match;
+    
+    while ((match = imgRegex.exec(content)) !== null) {
+      const imageUrl = processImageUrl(match[1]);
+      if (imageUrl) {
+        images.push(imageUrl);
+      }
+    }
+    
+    return images;
+  };
+
   const handleImport = async () => {
     if (blogs.length === 0) {
       toast.error('No blogs to import');
@@ -286,6 +325,17 @@ export const BlogImporter = ({ onImportComplete }: BlogImporterProps) => {
         const wordCount = blog.content.split(/\s+/).length;
         const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
+        // Process featured image URL
+        let featuredImageUrl = processImageUrl(blog.featuredImage || '');
+        
+        // If no featured image, try to extract first image from content
+        if (!featuredImageUrl && blog.content) {
+          const contentImages = extractImagesFromContent(blog.content);
+          if (contentImages.length > 0) {
+            featuredImageUrl = contentImages[0];
+          }
+        }
+
         const { error } = await supabase
           .from('blog_posts')
           .insert({
@@ -301,7 +351,7 @@ export const BlogImporter = ({ onImportComplete }: BlogImporterProps) => {
             tags: blog.tags,
             status: blog.status,
             reading_time: readingTime,
-            featured_image: blog.featuredImage || null,
+            featured_image: featuredImageUrl,
             published_at: blog.status === 'published' ? new Date(blog.date).toISOString() : null
           });
 
