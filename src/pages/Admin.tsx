@@ -44,6 +44,7 @@ import { SocialAuthManager } from "@/components/admin/SocialAuthManager";
 import { CheckoutSettingsManager } from "@/components/admin/CheckoutSettingsManager";
 import { BackupManager } from "@/components/admin/BackupManager";
 import { SEOManager } from "@/components/admin/SEOManager";
+import { QuickActionsPanel } from "@/components/admin/QuickActionsPanel";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -99,15 +100,22 @@ const Admin = () => {
     switch (activeTab) {
       case "overview":
         return (
-          <Tabs defaultValue="dashboard" className="space-y-6">
-            <TabsList className="bg-muted/50 p-1">
-              <TabsTrigger value="dashboard" className="gap-2">
-                📋 Dashboard Overview
+          <Tabs defaultValue="quick-actions" className="space-y-6">
+            <TabsList className="bg-muted/50 p-1 flex-wrap h-auto gap-1">
+              <TabsTrigger value="quick-actions" className="gap-2 text-xs sm:text-sm">
+                ⚡ Quick Actions
               </TabsTrigger>
-              <TabsTrigger value="analytics" className="gap-2">
-                📊 Analytics Report
+              <TabsTrigger value="dashboard" className="gap-2 text-xs sm:text-sm">
+                📋 Dashboard
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="gap-2 text-xs sm:text-sm">
+                📊 Analytics
               </TabsTrigger>
             </TabsList>
+            
+            <TabsContent value="quick-actions" className="m-0">
+              <QuickActionsPanel onNavigate={setActiveTab} />
+            </TabsContent>
             
             <TabsContent value="dashboard" className="m-0">
               <DashboardOverview onNavigate={setActiveTab} />
