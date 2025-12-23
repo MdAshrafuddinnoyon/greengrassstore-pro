@@ -40,7 +40,8 @@ import { BrandingManager } from "@/components/admin/BrandingManager";
 import { InvoiceTemplateManager } from "@/components/admin/InvoiceTemplateManager";
 import { VIPManager } from "@/components/admin/VIPManager";
 import { EmailNotificationManager } from "@/components/admin/EmailNotificationManager";
-
+import { ImageURLChecker } from "@/components/admin/ImageURLChecker";
+import { SocialAuthManager } from "@/components/admin/SocialAuthManager";
 const Admin = () => {
   const navigate = useNavigate();
   const { isAdmin, isLoading, checkRole, canAccessAdmin } = useAdminStore();
@@ -152,6 +153,8 @@ const Admin = () => {
               <TabsTrigger value="invoice" className="text-xs sm:text-sm">Invoice</TabsTrigger>
               <TabsTrigger value="tracking" className="text-xs sm:text-sm">Tracking</TabsTrigger>
               <TabsTrigger value="api" className="text-xs sm:text-sm">API & Security</TabsTrigger>
+              <TabsTrigger value="social-auth" className="text-xs sm:text-sm">Social Login</TabsTrigger>
+              <TabsTrigger value="images" className="text-xs sm:text-sm">Image Checker</TabsTrigger>
               <TabsTrigger value="smtp" className="text-xs sm:text-sm">SMTP / Email</TabsTrigger>
               <TabsTrigger value="templates" className="text-xs sm:text-sm">Email Templates</TabsTrigger>
             </TabsList>
@@ -182,6 +185,14 @@ const Admin = () => {
             
             <TabsContent value="api" className="m-0">
               <APISettingsManager />
+            </TabsContent>
+
+            <TabsContent value="social-auth" className="m-0">
+              <SocialAuthManager />
+            </TabsContent>
+
+            <TabsContent value="images" className="m-0">
+              <ImageURLChecker />
             </TabsContent>
             
             <TabsContent value="smtp" className="m-0">

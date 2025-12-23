@@ -6,17 +6,22 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Mail, Save, Bell, ShoppingBag, MessageSquare, FileText, Send, CheckCircle2 } from "lucide-react";
+import { Loader2, Mail, Save, Bell, ShoppingBag, MessageSquare, FileText, Send, CheckCircle2, Plus, X, Users } from "lucide-react";
 
 interface EmailNotificationSettings {
   enabled: boolean;
   adminEmail: string;
+  additionalEmails: string[];
   sendOnNewOrder: boolean;
   sendOnCustomRequest: boolean;
   sendOnContactForm: boolean;
   sendOnNewsletter: boolean;
   fromName: string;
   fromEmail: string;
+  orderNotificationChannel: 'email' | 'both';
+  telegramBotToken: string;
+  telegramChatId: string;
+  telegramEnabled: boolean;
 }
 
 export const EmailNotificationManager = () => {
@@ -27,13 +32,19 @@ export const EmailNotificationManager = () => {
   const [settings, setSettings] = useState<EmailNotificationSettings>({
     enabled: false,
     adminEmail: "",
+    additionalEmails: [],
     sendOnNewOrder: true,
     sendOnCustomRequest: true,
     sendOnContactForm: true,
     sendOnNewsletter: false,
     fromName: "Green Grass Store",
-    fromEmail: "noreply@example.com"
+    fromEmail: "noreply@example.com",
+    orderNotificationChannel: 'email',
+    telegramBotToken: "",
+    telegramChatId: "",
+    telegramEnabled: false
   });
+  const [newEmail, setNewEmail] = useState("");
 
   const fetchSettings = async () => {
     setLoading(true);
@@ -193,7 +204,77 @@ export const EmailNotificationManager = () => {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            All notification emails will be sent to this address
+            Primary admin email address for notifications
+          </p>
+        </div>
+
+        {/* Additional Email Recipients */}
+        <div className="space-y-3">
+          <Label className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-muted-foreground" />
+            Additional Email Recipients
+          </Label>
+          <div className="flex gap-2">
+            <Input
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              placeholder="another@email.com"
+              className="flex-1"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && newEmail && newEmail.includes('@')) {
+                  e.preventDefault();
+                  if (!settings.additionalEmails.includes(newEmail)) {
+                    setSettings(prev => ({
+                      ...prev,
+                      additionalEmails: [...prev.additionalEmails, newEmail]
+                    }));
+                    setNewEmail('');
+                  }
+                }
+              }}
+            />
+            <Button 
+              variant="outline"
+              onClick={() => {
+                if (newEmail && newEmail.includes('@') && !settings.additionalEmails.includes(newEmail)) {
+                  setSettings(prev => ({
+                    ...prev,
+                    additionalEmails: [...prev.additionalEmails, newEmail]
+                  }));
+                  setNewEmail('');
+                }
+              }}
+              disabled={!newEmail || !newEmail.includes('@')}
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          {settings.additionalEmails.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {settings.additionalEmails.map((email, index) => (
+                <div 
+                  key={index} 
+                  className="flex items-center gap-1 px-2 py-1 bg-muted rounded-md text-sm"
+                >
+                  <span>{email}</span>
+                  <button
+                    onClick={() => {
+                      setSettings(prev => ({
+                        ...prev,
+                        additionalEmails: prev.additionalEmails.filter((_, i) => i !== index)
+                      }));
+                    }}
+                    className="text-muted-foreground hover:text-destructive"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground">
+            These emails will also receive notification copies
           </p>
         </div>
 
