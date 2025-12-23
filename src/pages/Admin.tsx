@@ -39,6 +39,7 @@ import { SocialIntegrationManager } from "@/components/admin/SocialIntegrationMa
 import { BrandingManager } from "@/components/admin/BrandingManager";
 import { InvoiceTemplateManager } from "@/components/admin/InvoiceTemplateManager";
 import { VIPManager } from "@/components/admin/VIPManager";
+import { EmailNotificationManager } from "@/components/admin/EmailNotificationManager";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -146,6 +147,7 @@ const Admin = () => {
             <TabsList className="bg-muted/50 p-1 flex-wrap h-auto gap-1">
               <TabsTrigger value="general" className="text-xs sm:text-sm">General</TabsTrigger>
               <TabsTrigger value="users" className="text-xs sm:text-sm">Users & Roles</TabsTrigger>
+              <TabsTrigger value="notifications" className="text-xs sm:text-sm">Notifications</TabsTrigger>
               <TabsTrigger value="payments" className="text-xs sm:text-sm">Payments</TabsTrigger>
               <TabsTrigger value="invoice" className="text-xs sm:text-sm">Invoice</TabsTrigger>
               <TabsTrigger value="tracking" className="text-xs sm:text-sm">Tracking</TabsTrigger>
@@ -160,6 +162,10 @@ const Admin = () => {
             
             <TabsContent value="users" className="m-0">
               <UsersManager />
+            </TabsContent>
+            
+            <TabsContent value="notifications" className="m-0">
+              <EmailNotificationManager />
             </TabsContent>
             
             <TabsContent value="payments" className="m-0">

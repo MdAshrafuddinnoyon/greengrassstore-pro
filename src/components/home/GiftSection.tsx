@@ -1,10 +1,34 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Gift } from "lucide-react";
+import { ArrowRight, Gift, ImageOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useSiteSettings } from "@/contexts/SiteSettingsContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
+
+// Product image component with error handling
+const ProductImage = ({ src, alt }: { src: string; alt: string }) => {
+  const [hasError, setHasError] = useState(false);
+  
+  if (!src || hasError) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-muted/50">
+        <ImageOff className="w-10 h-10 text-muted-foreground/40 mb-2" />
+        <span className="text-xs text-muted-foreground/60">No Image</span>
+      </div>
+    );
+  }
+  
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+      onError={() => setHasError(true)}
+      loading="lazy"
+    />
+  );
+};
 
 interface GiftProduct {
   id: string;
@@ -163,10 +187,9 @@ export const GiftSection = () => {
                   >
                     <Link to={item.href} className="group block">
                       <div className="aspect-square overflow-hidden bg-muted rounded-2xl mb-2">
-                        <img
-                          src={item.image}
-                          alt={isArabic ? item.nameAr : item.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        <ProductImage 
+                          src={item.image} 
+                          alt={isArabic ? item.nameAr : item.name} 
                         />
                       </div>
                       <h3 className="text-sm font-medium text-foreground mb-1 line-clamp-1">
@@ -194,10 +217,9 @@ export const GiftSection = () => {
                     className="group block"
                   >
                     <div className="aspect-square overflow-hidden bg-muted rounded-xl mb-3">
-                      <img
-                        src={item.image}
+                      <ProductImage 
+                        src={item.image} 
                         alt={isArabic ? item.nameAr : item.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     </div>
                     <h3 className="text-sm font-medium text-foreground mb-1 group-hover:text-primary transition-colors">
