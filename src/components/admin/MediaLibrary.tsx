@@ -10,9 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { 
   Upload, Image, File, Trash2, Copy, Search, 
-  Grid3X3, List, Loader2, Download, FolderInput, CheckSquare
+  Grid3X3, List, Loader2, Download, FolderInput, CheckSquare, Zap, TrendingDown
 } from "lucide-react";
 import { ExportButtons } from "./ExportButtons";
+import { Switch } from "@/components/ui/switch";
 
 interface MediaFile {
   id: string;
@@ -42,6 +43,13 @@ export const MediaLibrary = () => {
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [moveToFolder, setMoveToFolder] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [webpOptimization, setWebpOptimization] = useState(true);
+  const [optimizationStats, setOptimizationStats] = useState<{
+    originalSize: number;
+    optimizedSize: number;
+    savings: number;
+    savingsPercent: number;
+  } | null>(null);
   const itemsPerPage = 20;
 
   const predefinedFolders = ['uploads', 'products', 'blog', 'categories', 'banners', 'logos'];
@@ -137,6 +145,8 @@ export const MediaLibrary = () => {
 
   const processFileUpload = async (uploadFiles: FileList) => {
     setUploading(true);
+    setOptimizationStats(null);
+    
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast.error('Please login to upload files');
@@ -148,32 +158,71 @@ export const MediaLibrary = () => {
     const targetFolder = selectedFolder !== 'all' ? selectedFolder : uploadFolder;
 
     try {
+      let totalOriginalSize = 0;
+      let totalOptimizedSize = 0;
+      let optimizedCount = 0;
+
       for (const file of Array.from(uploadFiles)) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-        const filePath = `${targetFolder}/${fileName}`;
+        const isImage = file.type.startsWith('image/');
+        
+        // Use WebP optimization for images if enabled
+        if (isImage && webpOptimization) {
+          try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('folder', targetFolder);
+            formData.append('quality', '80');
 
-        const { error: uploadError } = await supabase.storage
-          .from('media')
-          .upload(filePath, file);
+            // Get session token for auth
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            const response = await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/optimize-image`,
+              {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${session?.access_token}`,
+                },
+                body: formData,
+              }
+            );
 
-        if (uploadError) throw uploadError;
+            const result = await response.json();
 
-        const { error: dbError } = await supabase
-          .from('media_files')
-          .insert({
-            user_id: user.id,
-            file_name: file.name,
-            file_path: filePath,
-            file_type: file.type,
-            file_size: file.size,
-            folder: targetFolder
-          });
-
-        if (dbError) throw dbError;
+            if (result.success && result.data) {
+              totalOriginalSize += result.data.originalSize || 0;
+              totalOptimizedSize += result.data.optimizedSize || 0;
+              optimizedCount++;
+              console.log(`Optimized ${file.name}: ${result.data.savingsPercent}% savings`);
+            } else {
+              throw new Error(result.error || 'Optimization failed');
+            }
+          } catch (optError) {
+            console.error('Optimization error, falling back to direct upload:', optError);
+            // Fallback to direct upload if optimization fails
+            await uploadFileDirect(file, targetFolder, user.id);
+          }
+        } else {
+          // Direct upload for non-images or when optimization is disabled
+          await uploadFileDirect(file, targetFolder, user.id);
+        }
       }
 
-      toast.success(`${uploadFiles.length} file(s) uploaded to ${targetFolder}`);
+      // Show optimization stats
+      if (optimizedCount > 0 && totalOriginalSize > 0) {
+        const savings = totalOriginalSize - totalOptimizedSize;
+        const savingsPercent = Math.round((savings / totalOriginalSize) * 100);
+        setOptimizationStats({
+          originalSize: totalOriginalSize,
+          optimizedSize: totalOptimizedSize,
+          savings,
+          savingsPercent
+        });
+        toast.success(`${uploadFiles.length} file(s) uploaded with ${savingsPercent}% size reduction!`);
+      } else {
+        toast.success(`${uploadFiles.length} file(s) uploaded to ${targetFolder}`);
+      }
+      
       fetchFiles();
     } catch (error) {
       console.error('Upload error:', error);
@@ -181,6 +230,32 @@ export const MediaLibrary = () => {
     } finally {
       setUploading(false);
     }
+  };
+
+  // Direct upload without optimization
+  const uploadFileDirect = async (file: File, targetFolder: string, userId: string) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `${targetFolder}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('media')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { error: dbError } = await supabase
+      .from('media_files')
+      .insert({
+        user_id: userId,
+        file_name: file.name,
+        file_path: filePath,
+        file_type: file.type,
+        file_size: file.size,
+        folder: targetFolder
+      });
+
+    if (dbError) throw dbError;
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -331,6 +406,51 @@ export const MediaLibrary = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* WebP Optimization Toggle */}
+      <div className="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-lg border border-green-200 dark:border-green-800">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
+            <Zap className="w-5 h-5 text-green-600 dark:text-green-400" />
+          </div>
+          <div>
+            <p className="font-medium text-sm">WebP Auto-Optimization</p>
+            <p className="text-xs text-muted-foreground">
+              Automatically convert PNG/JPG to WebP for faster loading
+            </p>
+          </div>
+        </div>
+        <Switch
+          checked={webpOptimization}
+          onCheckedChange={setWebpOptimization}
+        />
+      </div>
+
+      {/* Optimization Stats */}
+      {optimizationStats && (
+        <div className="flex items-center gap-4 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+          <TrendingDown className="w-5 h-5 text-blue-600" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+              Image Optimization Complete!
+            </p>
+            <p className="text-xs text-blue-600 dark:text-blue-400">
+              {formatFileSize(optimizationStats.originalSize)} → {formatFileSize(optimizationStats.optimizedSize)} 
+              <span className="ml-2 font-bold text-green-600">
+                ({optimizationStats.savingsPercent}% saved)
+              </span>
+            </p>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setOptimizationStats(null)}
+            className="text-blue-600 hover:text-blue-800"
+          >
+            ✕
+          </Button>
+        </div>
+      )}
+
       {/* Drag and Drop Upload Area */}
       <div
         onDragOver={handleDragOver}
@@ -351,6 +471,7 @@ export const MediaLibrary = () => {
             ? `Files will be uploaded to "${selectedFolder}" folder`
             : 'or click to select files'
           }
+          {webpOptimization && <span className="ml-1 text-green-600">(WebP optimization enabled)</span>}
         </p>
         <label>
           <Button size="sm" disabled={uploading} asChild>
