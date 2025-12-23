@@ -125,6 +125,15 @@ export interface FooterSettings {
     whatsapp: string;
     twitter: string;
     youtube: string;
+    tiktok: string;
+    linkedin: string;
+    snapchat: string;
+    pinterest: string;
+    telegram: string;
+  };
+  paymentMethods: {
+    enabled: boolean;
+    images: string[];
   };
   developerCredit: {
     enabled: boolean;
@@ -142,7 +151,11 @@ export interface BrandingSettings {
   taglineAr: string;
   logoSizeDesktop: number;
   logoSizeMobile: number;
+  logoSizeTablet: number;
   logoAlignment: 'left' | 'center' | 'right';
+  // Domain/Site URL display
+  showDomainText: boolean;
+  domainText: string;
   // Payment Banner & Security (added for dynamic branding)
   showPaymentBanner?: boolean;
   paymentBannerImage?: string;
@@ -469,7 +482,16 @@ const defaultFooter: FooterSettings = {
     facebook: "https://www.facebook.com/greengrassstore",
     whatsapp: "+971547751901",
     twitter: "",
-    youtube: ""
+    youtube: "",
+    tiktok: "",
+    linkedin: "",
+    snapchat: "",
+    pinterest: "",
+    telegram: ""
+  },
+  paymentMethods: {
+    enabled: true,
+    images: []
   },
   developerCredit: {
     enabled: true,
@@ -487,7 +509,10 @@ const defaultBranding: BrandingSettings = {
   taglineAr: "متجر النباتات والأواني",
   logoSizeDesktop: 120,
   logoSizeMobile: 80,
-  logoAlignment: "left"
+  logoSizeTablet: 100,
+  logoAlignment: "left",
+  showDomainText: true,
+  domainText: "www.greengrassstore.com"
 };
 
 const defaultThemeColors: ThemeColors = {

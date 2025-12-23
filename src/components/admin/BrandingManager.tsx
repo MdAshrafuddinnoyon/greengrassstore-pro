@@ -21,7 +21,10 @@ interface BrandingSettings {
   taglineAr: string;
   logoSizeDesktop: number;
   logoSizeMobile: number;
+  logoSizeTablet: number;
   logoAlignment: 'left' | 'center' | 'right';
+  showDomainText: boolean;
+  domainText: string;
   // Payment Banner & Security
   showPaymentBanner?: boolean;
   paymentBannerImage?: string;
@@ -61,7 +64,10 @@ const defaultBranding: BrandingSettings = {
   taglineAr: "متجر النباتات والأواني",
   logoSizeDesktop: 120,
   logoSizeMobile: 80,
+  logoSizeTablet: 100,
   logoAlignment: "left",
+  showDomainText: true,
+  domainText: "www.greengrassstore.com",
   showPaymentBanner: true,
   paymentBannerImage: "",
   paymentBannerLink: "",
@@ -312,7 +318,7 @@ export const BrandingManager = () => {
                 </div>
               </div>
               {/* Logo Size Controls */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4 border-t">
                 <div className="space-y-2">
                   <Label className="text-xs md:text-sm">Desktop Logo Width (px)</Label>
                   <div className="flex items-center gap-3">
@@ -325,6 +331,20 @@ export const BrandingManager = () => {
                       className="flex-1"
                     />
                     <span className="text-sm font-medium w-12 text-right">{branding.logoSizeDesktop || 120}px</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs md:text-sm">Tablet Logo Width (px)</Label>
+                  <div className="flex items-center gap-3">
+                    <Input
+                      type="range"
+                      min="50"
+                      max="150"
+                      value={branding.logoSizeTablet || 100}
+                      onChange={(e) => setBranding(prev => ({ ...prev, logoSizeTablet: parseInt(e.target.value) }))}
+                      className="flex-1"
+                    />
+                    <span className="text-sm font-medium w-12 text-right">{branding.logoSizeTablet || 100}px</span>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -356,6 +376,31 @@ export const BrandingManager = () => {
                       <SelectItem value="right">Right</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+
+              {/* Domain Text Settings */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={branding.showDomainText ?? true}
+                      onCheckedChange={(checked) => setBranding(prev => ({ ...prev, showDomainText: checked }))}
+                    />
+                    <Label className="text-xs md:text-sm">Show Domain/URL Below Logo</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Display your website URL below the logo in header
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs md:text-sm">Domain Text</Label>
+                  <Input
+                    value={branding.domainText || 'www.greengrassstore.com'}
+                    onChange={(e) => setBranding(prev => ({ ...prev, domainText: e.target.value }))}
+                    placeholder="www.yourstore.com"
+                    disabled={!branding.showDomainText}
+                  />
                 </div>
               </div>
             </CardContent>
