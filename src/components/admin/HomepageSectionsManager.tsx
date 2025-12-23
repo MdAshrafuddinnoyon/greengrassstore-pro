@@ -756,27 +756,74 @@ export const HomepageSectionsManager = () => {
 
               <div className="space-y-2">
                 <Label>Select Categories to Display</Label>
-                <p className="text-sm text-muted-foreground mb-2">Leave empty to auto-select from active categories. Drag to reorder selected categories.</p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {/* Unselected categories (checkboxes) */}
-                  {categories.filter(cat => !featuredCategorySettings.selectedCategories.includes(cat.id)).map(cat => (
-                    <div key={cat.id} className="flex flex-col gap-1 p-2 border rounded hover:bg-muted/50">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={false}
-                          onChange={() => {
-                            setFeaturedCategorySettings(prev => ({
-                              ...prev,
-                              selectedCategories: [...prev.selectedCategories, cat.id]
-                            }));
-                          }}
-                        />
-                        <span className="text-sm">{cat.name}</span>
-                      </label>
-                    </div>
-                  ))}
+                <p className="text-sm text-muted-foreground mb-2">Select categories from dropdown. Drag to reorder selected categories.</p>
+                
+                {/* Dropdown to add categories */}
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <Select
+                      value=""
+                      onValueChange={(catId) => {
+                        if (catId && !featuredCategorySettings.selectedCategories.includes(catId)) {
+                          setFeaturedCategorySettings(prev => ({
+                            ...prev,
+                            selectedCategories: [...prev.selectedCategories, catId]
+                          }));
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full bg-background">
+                        <SelectValue placeholder="Select a category to add..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border shadow-lg z-50">
+                        {categories.length === 0 ? (
+                          <div className="py-4 px-3 text-center text-muted-foreground text-sm">
+                            No categories available. Please add categories first.
+                          </div>
+                        ) : (
+                          categories
+                            .filter(cat => !featuredCategorySettings.selectedCategories.includes(cat.id))
+                            .map(cat => (
+                              <SelectItem key={cat.id} value={cat.id}>
+                                {cat.name}
+                              </SelectItem>
+                            ))
+                        )}
+                        {categories.length > 0 && 
+                          categories.filter(cat => !featuredCategorySettings.selectedCategories.includes(cat.id)).length === 0 && (
+                            <div className="py-4 px-3 text-center text-muted-foreground text-sm">
+                              All categories are already selected
+                            </div>
+                          )
+                        }
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      // Add all unselected categories
+                      const unselectedIds = categories
+                        .filter(cat => !featuredCategorySettings.selectedCategories.includes(cat.id))
+                        .map(cat => cat.id);
+                      setFeaturedCategorySettings(prev => ({
+                        ...prev,
+                        selectedCategories: [...prev.selectedCategories, ...unselectedIds]
+                      }));
+                    }}
+                    disabled={categories.filter(cat => !featuredCategorySettings.selectedCategories.includes(cat.id)).length === 0}
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add All
+                  </Button>
                 </div>
+                
+                {/* Show count */}
+                <p className="text-xs text-muted-foreground">
+                  {featuredCategorySettings.selectedCategories.length} of {categories.length} categories selected
+                </p>
                 {/* Drag-and-drop for selected categories */}
                 <div className="mt-4">
                   <Label className="text-xs mb-1">Selected Categories (Drag to reorder)</Label>
