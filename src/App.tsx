@@ -11,6 +11,7 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import { FloatingActionMenu } from "@/components/FloatingActionMenu";
 import { LocalCompareDrawer } from "@/components/compare/LocalCompareDrawer";
 import { MessengerButton } from "@/components/chat/MessengerButton";
+import { AISalesAgent } from "@/components/chat/AISalesAgent";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import ProductDetail from "./pages/ProductDetail";
@@ -159,6 +160,7 @@ const AppContent = () => {
       <FloatingActionMenu />
       <LocalCompareDrawer />
       <MessengerButton />
+      <AISalesAgent />
       <MobileBottomNav />
     </BrowserRouter>
   );
