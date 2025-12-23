@@ -206,19 +206,19 @@ export const CategoryManager = () => {
         <TableRow key={category.id} className={isSubcategory ? "bg-muted/30" : ""}>
           <TableCell>
             <div className={`flex items-center gap-2 ${isSubcategory ? "pl-6" : ""}`}>
-              {!isSubcategory && hasSubcategories && (
+              {!isSubcategory && (
                 <button
                   onClick={() => toggleExpand(category.id)}
                   className="p-1 hover:bg-muted rounded"
+                  title={hasSubcategories ? (isExpanded ? "Collapse" : "Expand") : "No subcategories"}
                 >
                   {isExpanded ? (
                     <ChevronDown className="w-4 h-4" />
                   ) : (
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className={`w-4 h-4 ${!hasSubcategories ? 'opacity-30' : ''}`} />
                   )}
                 </button>
               )}
-              {!isSubcategory && !hasSubcategories && <div className="w-6" />}
               {isSubcategory && <div className="w-2" />}
               {category.image_url ? (
                 <img 
@@ -242,6 +242,11 @@ export const CategoryManager = () => {
               {isSubcategory && (
                 <Badge variant="outline" className="w-fit mt-1 text-xs">Subcategory</Badge>
               )}
+              {!isSubcategory && (
+                <span className="text-xs text-muted-foreground">
+                  {subcats.length} subcategories
+                </span>
+              )}
             </div>
           </TableCell>
           <TableCell>
@@ -263,10 +268,10 @@ export const CategoryManager = () => {
                   size="sm"
                   onClick={() => openAddSubcategory(category.id)}
                   title="Add subcategory"
-                  className="gap-1 text-xs"
+                  className="gap-1 text-xs bg-primary/10 hover:bg-primary/20 border-primary/30"
                 >
                   <Plus className="w-3 h-3" />
-                  <span className="hidden sm:inline">Sub</span>
+                  <span className="hidden sm:inline">Add Sub</span>
                 </Button>
               )}
               <Button
@@ -287,7 +292,25 @@ export const CategoryManager = () => {
           </TableCell>
         </TableRow>
         {/* Render subcategories if expanded */}
-        {!isSubcategory && isExpanded && subcats.map(subcat => renderCategoryRow(subcat, true))}
+        {!isSubcategory && isExpanded && (
+          <>
+            {subcats.map(subcat => renderCategoryRow(subcat, true))}
+            {/* Add subcategory row at the end */}
+            <TableRow className="bg-primary/5 border-dashed">
+              <TableCell colSpan={6}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => openAddSubcategory(category.id)}
+                  className="w-full gap-2 text-primary hover:text-primary hover:bg-primary/10"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add New Subcategory to "{category.name}"
+                </Button>
+              </TableCell>
+            </TableRow>
+          </>
+        )}
       </>
     );
   };
