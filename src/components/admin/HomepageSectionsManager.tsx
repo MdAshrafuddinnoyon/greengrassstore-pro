@@ -244,6 +244,31 @@ export const HomepageSectionsManager = () => {
 
   useEffect(() => {
     fetchSettings();
+
+    // Subscribe to realtime category changes
+    const categoryChannel = supabase
+      .channel('homepage-categories-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'categories' },
+        () => {
+          // Refetch categories when any category changes
+          supabase
+            .from('categories')
+            .select('id, name, slug, parent_id')
+            .eq('is_active', true)
+            .is('parent_id', null)
+            .order('display_order')
+            .then(({ data }) => {
+              if (data) setCategories(data);
+            });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(categoryChannel);
+    };
   }, []);
 
   const saveSettings = async (key: string, value: object) => {

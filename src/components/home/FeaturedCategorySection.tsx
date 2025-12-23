@@ -396,6 +396,10 @@ const CategoryBannerSlider = ({ category, products, reverse }: CategoryBannerSli
                         src={displayImage}
                         alt={isArabic && product.name_ar ? product.name_ar : product.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/placeholder.svg';
+                        }}
                       />
                       {/* Badges */}
                       <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
