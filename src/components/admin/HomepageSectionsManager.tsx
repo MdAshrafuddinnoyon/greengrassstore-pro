@@ -9,9 +9,10 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Save, RefreshCw, Image as ImageIcon, Gift, Tag, Sparkles, Grid, Package, Instagram, X, Plus } from "lucide-react";
+import { Loader2, Save, RefreshCw, Image as ImageIcon, Gift, Tag, Sparkles, Grid, Package, Instagram, X, Plus, Circle, Square, RectangleHorizontal } from "lucide-react";
 import { MediaPicker } from "./MediaPicker";
 import { GiftProductSelector } from "./GiftProductSelector";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface HeroSettings {
   enabled: boolean;
@@ -106,6 +107,8 @@ interface CategoryGridSettings {
   showArrows: boolean;
   imageScale: number;
   selectedCategoryIds: string[];
+  shape?: 'circle' | 'square' | 'rounded';
+  gap?: number;
 }
 
 export const HomepageSectionsManager = () => {
@@ -119,7 +122,9 @@ export const HomepageSectionsManager = () => {
     autoplaySpeed: 3000,
     showArrows: true,
     imageScale: 1,
-    selectedCategoryIds: []
+    selectedCategoryIds: [],
+    shape: 'circle',
+    gap: 24
   });
 
   const [heroSettings, setHeroSettings] = useState<HeroSettings>({
@@ -570,6 +575,61 @@ export const HomepageSectionsManager = () => {
                   />
                 </div>
               </div>
+
+              {/* Shape and Gap Settings */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Category Shape</Label>
+                  <Select
+                    value={categoryGridSettings.shape || 'circle'}
+                    onValueChange={(value: 'circle' | 'square' | 'rounded') => 
+                      setCategoryGridSettings(prev => ({ ...prev, shape: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="circle">
+                        <div className="flex items-center gap-2">
+                          <Circle className="w-4 h-4" />
+                          Circle
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="square">
+                        <div className="flex items-center gap-2">
+                          <Square className="w-4 h-4" />
+                          Square
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="rounded">
+                        <div className="flex items-center gap-2">
+                          <RectangleHorizontal className="w-4 h-4" />
+                          Rounded
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">Select category image shape</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Gap Between Items (px)</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="range"
+                      min="8"
+                      max="48"
+                      step="4"
+                      value={categoryGridSettings.gap || 24}
+                      onChange={(e) => setCategoryGridSettings(prev => ({ ...prev, gap: parseInt(e.target.value) }))}
+                      className="flex-1"
+                    />
+                    <span className="text-sm w-12">{categoryGridSettings.gap || 24}px</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Space between category items</p>
+                </div>
+              </div>
+
 
               <div className="space-y-2">
                 <Label>Select Categories to Display</Label>
