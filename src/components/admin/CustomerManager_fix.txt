@@ -1,0 +1,96 @@
+  const handleResetPassword = async () => {
+    if (!customerForReset?.email) return;
+
+    setResetLoading(true);
+    try {
+      if (passwordChangeType === 'direct') {
+        // Direct password change
+        if (!newPassword || newPassword.length < 6) {
+          toast.error('Password must be at least 6 characters');
+          setResetLoading(false);
+          return;
+        }
+
+        const { error } = await supabase.auth.admin.updateUserById(
+          customerForReset.user_id,
+          { password: newPassword }
+        );
+
+        if (error) throw error;
+        toast.success(`Password updated successfully for ${customerForReset.email}`);
+      } else {
+        // Send reset link
+        const { data, error } = await supabase.auth.admin.generateLink({
+          type: 'recovery',
+          email: customerForReset.email,
+          options: {
+            redirectTo: `${window.location.origin}/auth?type=reset_password`
+          }
+        });
+
+        if (error) throw error;
+
+        const resetLink = data?.properties?.action_link;
+        if (resetLink) {
+          await navigator.clipboard.writeText(resetLink);
+          toast.success(`Password reset link copied to clipboard for ${customerForReset.email}`);
+        } else {
+          toast.success(`Password reset email sent to ${customerForReset.email}`);
+        }
+      }
+
+      setResetPasswordDialogOpen(false);
+      setCustomerForReset(null);
+      setNewPassword('');
+      setPasswordChangeType('link');
+    } catch (error: any) {
+      console.error('Error resetting password:', error);
+      toast.error(error?.message || 'Failed to reset password');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleEditCustomer = async () => {
+    if (!customerForEdit) return;
+    if (!customerForEdit.full_name?.trim()) {
+      toast.error('Customer name is required');
+      return;
+    }
+
+    setEditLoading(true);
+    try {
+      // Update profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: customerForEdit.full_name,
+          phone: customerForEdit.phone || null,
+          address: customerForEdit.address || null,
+          city: customerForEdit.city || null,
+          country: customerForEdit.country || null,
+        })
+        .eq('user_id', customerForEdit.user_id);
+
+      if (profileError) throw profileError;
+
+      // Update email if changed
+      if (customerForEdit.email && customerForEdit.email !== customers.find(c => c.user_id === customerForEdit.user_id)?.email) {
+        const { error: emailError } = await supabase.auth.admin.updateUserById(
+          customerForEdit.user_id,
+          { email: customerForEdit.email }
+        );
+        if (emailError) throw emailError;
+      }
+
+      toast.success('Customer updated successfully');
+      setEditDialogOpen(false);
+      setCustomerForEdit(null);
+      fetchCustomers();
+    } catch (error: any) {
+      console.error('Error updating customer:', error);
+      toast.error(error?.message || 'Failed to update customer');
+    } finally {
+      setEditLoading(false);
+    }
+  };

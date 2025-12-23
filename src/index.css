@@ -1,0 +1,254 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Clean, minimal palette for plant store */
+    --background: 60 20% 99%;
+    --foreground: 0 0% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 12%;
+
+    /* Forest green primary */
+    --primary: 150 40% 30%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Light cream secondary */
+    --secondary: 45 30% 96%;
+    --secondary-foreground: 0 0% 12%;
+
+    --muted: 60 10% 95%;
+    --muted-foreground: 0 0% 45%;
+
+    /* Sage green accent */
+    --accent: 140 20% 94%;
+    --accent-foreground: 150 40% 25%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 150 40% 30%;
+
+    --radius: 0.25rem;
+
+    /* Custom tokens */
+    --header-height: 80px;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 12%;
+    --sidebar-primary: 150 40% 30%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 140 20% 94%;
+    --sidebar-accent-foreground: 150 40% 25%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 150 40% 30%;
+  }
+
+  .dark {
+    --background: 0 0% 8%;
+    --foreground: 0 0% 95%;
+
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 145 45% 45%;
+    --primary-foreground: 0 0% 5%;
+
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 145 20% 15%;
+    --accent-foreground: 145 45% 60%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 145 45% 45%;
+
+    --sidebar-background: 0 0% 8%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 145 45% 45%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 145 20% 15%;
+    --sidebar-accent-foreground: 145 45% 60%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 145 45% 45%;
+  }
+
+  /* RTL Support for Arabic */
+  [dir="rtl"] {
+    text-align: right;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  .nav-link {
+    @apply relative text-foreground/70 hover:text-foreground transition-colors duration-200 text-sm uppercase tracking-widest font-medium;
+  }
+
+  .nav-link::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-0 h-[1px] bg-foreground transition-all duration-300;
+  }
+
+  .nav-link:hover::after,
+  .nav-link.active::after {
+    @apply w-full;
+  }
+
+  .btn-primary {
+    @apply bg-foreground text-background px-8 py-3 text-sm uppercase tracking-widest font-medium transition-all duration-300;
+    @apply hover:bg-foreground/90;
+  }
+
+  .btn-outline {
+    @apply border border-foreground text-foreground px-8 py-3 text-sm uppercase tracking-widest font-medium transition-all duration-300;
+    @apply hover:bg-foreground hover:text-background;
+  }
+
+  .btn-link {
+    @apply text-foreground text-sm uppercase tracking-widest font-medium underline underline-offset-4 transition-colors;
+    @apply hover:text-primary;
+  }
+
+  .section-title {
+    @apply font-display text-3xl md:text-4xl lg:text-5xl font-normal tracking-tight;
+  }
+
+  .section-subtitle {
+    @apply text-sm uppercase tracking-widest text-muted-foreground;
+  }
+
+  .product-card {
+    @apply bg-card overflow-hidden transition-all duration-300;
+  }
+
+  .category-card {
+    @apply relative overflow-hidden cursor-pointer;
+  }
+
+  .category-card::after {
+    content: '';
+    @apply absolute inset-0 bg-foreground/0 transition-all duration-300;
+  }
+
+  .category-card:hover::after {
+    @apply bg-foreground/10;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-fade-up {
+    animation: fadeUp 0.6s ease-out forwards;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Mobile App Style Utilities */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Mobile App Experience */
+@media (max-width: 768px) {
+  body {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Add bottom padding for fixed navigation */
+  main {
+    padding-bottom: 4rem;
+  }
+
+  /* Smooth scrolling for app feel */
+  .snap-x {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .snap-start {
+    scroll-snap-align: start;
+  }
+}
