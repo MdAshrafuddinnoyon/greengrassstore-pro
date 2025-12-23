@@ -18,6 +18,7 @@ interface Category {
   name_ar: string | null;
   slug: string;
   image: string | null;
+  image_url?: string | null;
   description: string | null;
 }
 
@@ -162,6 +163,8 @@ export const CategoriesGrid = () => {
   const displayLimit = isMobile ? (settings.displayCountMobile || 6) : settings.displayCount;
   const displayCategories = categories.slice(0, displayLimit).map((category) => {
     const isSale = category.slug === "sale" || category.slug.includes("sale");
+    // Use image_url first (from admin), then fallback to image
+    const categoryImage = category.image_url || category.image;
     
     return {
       id: category.id,
@@ -170,7 +173,7 @@ export const CategoriesGrid = () => {
       icon: getIconForCategory(category.slug, category.name),
       href: `/shop?category=${category.slug}`,
       isSale,
-      image: category.image,
+      image: categoryImage,
     };
   });
 

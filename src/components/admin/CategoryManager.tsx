@@ -263,8 +263,10 @@ export const CategoryManager = () => {
                   size="sm"
                   onClick={() => openAddSubcategory(category.id)}
                   title="Add subcategory"
+                  className="gap-1 text-xs"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-3 h-3" />
+                  <span className="hidden sm:inline">Sub</span>
                 </Button>
               )}
               <Button
