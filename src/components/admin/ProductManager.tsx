@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Plus, Pencil, Trash2, Package, RefreshCw, X, Copy, Eye, Upload, CheckSquare, Square } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Package, RefreshCw, X, Copy, Eye, Upload, CheckSquare, Square, FileDown, Download } from "lucide-react";
 import { MediaPicker } from "./MediaPicker";
 import { ExportButtons } from "./ExportButtons";
 import { ProductCSVImporter } from "./ProductCSVImporter";
@@ -42,6 +42,15 @@ interface ProductVariant {
   image_url?: string;
 }
 
+interface DigitalFile {
+  id?: string;
+  name: string;
+  url: string;
+  size?: number;
+  download_limit?: number;
+  expiry_days?: number;
+}
+
 interface Product {
   id: string;
   name: string;
@@ -60,10 +69,11 @@ interface Product {
   is_on_sale: boolean;
   is_new: boolean;
   is_active: boolean;
+  is_digital?: boolean;
   stock_quantity: number;
   sku?: string;
   tags?: string[];
-  product_type: 'simple' | 'variable';
+  product_type: 'simple' | 'variable' | 'digital';
   option1_name?: string;
   option1_values?: string[];
   option2_name?: string;
@@ -71,6 +81,9 @@ interface Product {
   option3_name?: string;
   option3_values?: string[];
   variants?: ProductVariant[];
+  digital_files?: DigitalFile[];
+  download_limit?: number;
+  download_expiry_days?: number;
 }
 
 interface Category {
@@ -1030,11 +1043,12 @@ export const ProductManager = () => {
           </DialogHeader>
           
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-4 w-full">
+            <TabsList className="grid grid-cols-5 w-full">
               <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="images">Images</TabsTrigger>
               <TabsTrigger value="pricing">Pricing</TabsTrigger>
               <TabsTrigger value="variants">Variants</TabsTrigger>
+              <TabsTrigger value="digital">Digital</TabsTrigger>
             </TabsList>
 
             <TabsContent value="general" className="space-y-4 mt-4">
@@ -1330,7 +1344,7 @@ export const ProductManager = () => {
                 <Label>Product Type</Label>
                 <Select
                   value={editingProduct?.product_type || 'simple'}
-                  onValueChange={(v) => setEditingProduct(p => ({ ...p, product_type: v as 'simple' | 'variable' }))}
+                  onValueChange={(v) => setEditingProduct(p => ({ ...p, product_type: v as 'simple' | 'variable' | 'digital', is_digital: v === 'digital' }))}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -1338,8 +1352,14 @@ export const ProductManager = () => {
                   <SelectContent>
                     <SelectItem value="simple">Simple Product</SelectItem>
                     <SelectItem value="variable">Variable Product</SelectItem>
+                    <SelectItem value="digital">Digital Product</SelectItem>
                   </SelectContent>
                 </Select>
+                {editingProduct?.product_type === 'digital' && (
+                  <p className="text-sm text-muted-foreground">
+                    Digital products allow customers to download files after purchase.
+                  </p>
+                )}
               </div>
 
               {editingProduct?.product_type === 'variable' && (
@@ -1450,6 +1470,142 @@ export const ProductManager = () => {
                       ))}
                     </div>
                   )}
+                </>
+              )}
+            </TabsContent>
+
+            {/* Digital Products Tab */}
+            <TabsContent value="digital" className="space-y-4 mt-4">
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 mb-2">
+                  <FileDown className="w-5 h-5" />
+                  <span className="font-medium">Digital Product Settings</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Upload downloadable files that customers can access after purchase.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={editingProduct?.is_digital || editingProduct?.product_type === 'digital'}
+                  onCheckedChange={(v) => setEditingProduct(p => ({ 
+                    ...p, 
+                    is_digital: v,
+                    product_type: v ? 'digital' : 'simple'
+                  }))}
+                />
+                <Label>This is a digital product</Label>
+              </div>
+
+              {(editingProduct?.is_digital || editingProduct?.product_type === 'digital') && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Download Limit (per purchase)</Label>
+                      <Input
+                        type="number"
+                        value={editingProduct?.download_limit || ''}
+                        onChange={(e) => setEditingProduct(p => ({ ...p, download_limit: parseInt(e.target.value) || undefined }))}
+                        placeholder="Unlimited"
+                      />
+                      <p className="text-xs text-muted-foreground">Leave empty for unlimited downloads</p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Download Expiry (days)</Label>
+                      <Input
+                        type="number"
+                        value={editingProduct?.download_expiry_days || ''}
+                        onChange={(e) => setEditingProduct(p => ({ ...p, download_expiry_days: parseInt(e.target.value) || undefined }))}
+                        placeholder="Never expires"
+                      />
+                      <p className="text-xs text-muted-foreground">Leave empty for no expiry</p>
+                    </div>
+                  </div>
+
+                  {/* Digital Files List */}
+                  <div className="space-y-3">
+                    <Label>Downloadable Files</Label>
+                    
+                    {(editingProduct?.digital_files || []).length > 0 ? (
+                      <div className="space-y-2">
+                        {editingProduct?.digital_files?.map((file, index) => (
+                          <div key={index} className="flex items-center gap-3 p-3 border rounded-lg bg-muted/30">
+                            <Download className="w-5 h-5 text-blue-500" />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">{file.name}</p>
+                              <p className="text-xs text-muted-foreground truncate">{file.url}</p>
+                              {file.size && (
+                                <p className="text-xs text-muted-foreground">
+                                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                                </p>
+                              )}
+                            </div>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="text-destructive"
+                              onClick={() => {
+                                const files = [...(editingProduct?.digital_files || [])];
+                                files.splice(index, 1);
+                                setEditingProduct(p => ({ ...p, digital_files: files }));
+                              }}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-6 border-2 border-dashed rounded-lg text-center text-muted-foreground">
+                        <FileDown className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">No files added yet</p>
+                      </div>
+                    )}
+
+                    {/* Add File via URL */}
+                    <div className="space-y-2">
+                      <Label className="text-sm">Add File from URL</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="digital-file-url"
+                          placeholder="https://example.com/file.pdf"
+                          className="flex-1"
+                        />
+                        <Input
+                          id="digital-file-name"
+                          placeholder="File name"
+                          className="w-40"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            const urlInput = document.getElementById('digital-file-url') as HTMLInputElement;
+                            const nameInput = document.getElementById('digital-file-name') as HTMLInputElement;
+                            const url = urlInput?.value?.trim();
+                            const name = nameInput?.value?.trim() || url?.split('/').pop() || 'file';
+                            
+                            if (url) {
+                              const files = [...(editingProduct?.digital_files || [])];
+                              files.push({ name, url });
+                              setEditingProduct(p => ({ ...p, digital_files: files }));
+                              urlInput.value = '';
+                              nameInput.value = '';
+                              toast.success('File added');
+                            } else {
+                              toast.error('Please enter a file URL');
+                            }
+                          }}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Add files from Media Library or external URLs. Go to Media Library to upload new files.
+                      </p>
+                    </div>
+                  </div>
                 </>
               )}
             </TabsContent>
