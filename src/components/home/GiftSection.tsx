@@ -27,17 +27,18 @@ export const GiftSection = () => {
     const fetchGiftProducts = async () => {
       try {
         const productsLimit = giftSection.productsLimit || 6;
-        // Fetch products that have 'gift' tag, 'gift'/'gifts' in category/subcategory
+        // Fetch all active products
         const { data, error } = await supabase
           .from('products')
           .select('id, name, name_ar, price, featured_image, slug, category, subcategory, tags')
           .eq('is_active', true)
-          .limit(50);
+          .order('created_at', { ascending: false })
+          .limit(100);
         
         if (error) throw error;
         
         // Filter products that match gift criteria (case-insensitive)
-        const giftProducts = (data || []).filter(product => {
+        const filteredProducts = (data || []).filter(product => {
           const categoryLower = product.category?.toLowerCase() || '';
           const subcategoryLower = product.subcategory?.toLowerCase() || '';
           const categoryMatch = categoryLower.includes('gift') || categoryLower === 'gifts';
@@ -48,7 +49,12 @@ export const GiftSection = () => {
           return categoryMatch || subcategoryMatch || tagsMatch;
         }).slice(0, productsLimit);
         
-        setGiftProducts(giftProducts);
+        // If no gift products found, show any active products as fallback
+        if (filteredProducts.length === 0) {
+          setGiftProducts((data || []).slice(0, productsLimit));
+        } else {
+          setGiftProducts(filteredProducts);
+        }
       } catch (error) {
         console.error('Error fetching gift products:', error);
       } finally {
@@ -73,7 +79,7 @@ export const GiftSection = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [giftSection.productsLimit]);
 
   if (!giftSection.enabled && !loading) return null;
 
