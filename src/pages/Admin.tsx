@@ -32,14 +32,13 @@ import { CouponManager } from "@/components/admin/CouponManager";
 import { PaymentSettingsManager } from "@/components/admin/PaymentSettingsManager";
 import { TrackingPixelManager } from "@/components/admin/TrackingPixelManager";
 import { AnalyticsReport } from "@/components/admin/AnalyticsReport";
-import { EmailTemplateManager } from "@/components/admin/EmailTemplateManager";
 import { FooterMenuManager } from "@/components/admin/FooterMenuManager";
 import { SMTPSettingsManager } from "@/components/admin/SMTPSettingsManager";
 import { SocialIntegrationManager } from "@/components/admin/SocialIntegrationManager";
 import { BrandingManager } from "@/components/admin/BrandingManager";
 import { InvoiceTemplateManager } from "@/components/admin/InvoiceTemplateManager";
 import { VIPManager } from "@/components/admin/VIPManager";
-import { EmailNotificationManager } from "@/components/admin/EmailNotificationManager";
+import { UnifiedEmailManager } from "@/components/admin/UnifiedEmailManager";
 import { ImageURLChecker } from "@/components/admin/ImageURLChecker";
 import { SocialAuthManager } from "@/components/admin/SocialAuthManager";
 const Admin = () => {
@@ -148,15 +147,14 @@ const Admin = () => {
             <TabsList className="bg-muted/50 p-1 flex-wrap h-auto gap-1">
               <TabsTrigger value="general" className="text-xs sm:text-sm">General</TabsTrigger>
               <TabsTrigger value="users" className="text-xs sm:text-sm">Users & Roles</TabsTrigger>
-              <TabsTrigger value="notifications" className="text-xs sm:text-sm">Notifications</TabsTrigger>
+              <TabsTrigger value="email" className="text-xs sm:text-sm">Email Settings</TabsTrigger>
               <TabsTrigger value="payments" className="text-xs sm:text-sm">Payments</TabsTrigger>
               <TabsTrigger value="invoice" className="text-xs sm:text-sm">Invoice</TabsTrigger>
               <TabsTrigger value="tracking" className="text-xs sm:text-sm">Tracking</TabsTrigger>
               <TabsTrigger value="api" className="text-xs sm:text-sm">API & Security</TabsTrigger>
               <TabsTrigger value="social-auth" className="text-xs sm:text-sm">Social Login</TabsTrigger>
               <TabsTrigger value="images" className="text-xs sm:text-sm">Image Checker</TabsTrigger>
-              <TabsTrigger value="smtp" className="text-xs sm:text-sm">SMTP / Email</TabsTrigger>
-              <TabsTrigger value="templates" className="text-xs sm:text-sm">Email Templates</TabsTrigger>
+              <TabsTrigger value="smtp" className="text-xs sm:text-sm">SMTP</TabsTrigger>
             </TabsList>
             
             <TabsContent value="general" className="m-0">
@@ -167,8 +165,8 @@ const Admin = () => {
               <UsersManager />
             </TabsContent>
             
-            <TabsContent value="notifications" className="m-0">
-              <EmailNotificationManager />
+            <TabsContent value="email" className="m-0">
+              <UnifiedEmailManager />
             </TabsContent>
             
             <TabsContent value="payments" className="m-0">
@@ -199,9 +197,6 @@ const Admin = () => {
               <SMTPSettingsManager />
             </TabsContent>
             
-            <TabsContent value="templates" className="m-0">
-              <EmailTemplateManager />
-            </TabsContent>
           </Tabs>
         );
       default:
