@@ -91,6 +91,8 @@ interface CategoryGridSettings {
   autoplaySpeed: number;
   showArrows: boolean;
   imageScale: number;
+  shape?: 'circle' | 'square' | 'rounded';
+  gap?: number;
 }
 
 export const CategoriesGrid = () => {
@@ -104,7 +106,9 @@ export const CategoriesGrid = () => {
     displayCountMobile: 6,
     autoplaySpeed: 3000,
     showArrows: true,
-    imageScale: 1
+    imageScale: 1,
+    shape: 'circle',
+    gap: 24
   });
 
   // Detect mobile
@@ -234,9 +238,18 @@ export const CategoriesGrid = () => {
 
           {/* Embla Carousel */}
           <div className="overflow-hidden" ref={emblaRef}>
-            <div className="flex gap-6 md:gap-8">
+            <div 
+              className="flex"
+              style={{ gap: `${settings.gap || 24}px` }}
+            >
               {displayCategories.map((category, index) => {
                 const IconComponent = category.icon;
+                const shapeClass = settings.shape === 'square' 
+                  ? 'rounded-none' 
+                  : settings.shape === 'rounded' 
+                    ? 'rounded-xl' 
+                    : 'rounded-full';
+                
                 return (
                   <motion.div
                     key={category.id}
@@ -245,18 +258,20 @@ export const CategoriesGrid = () => {
                     transition={{ duration: 0.3, delay: index * 0.03 }}
                     viewport={{ once: true }}
                     className="flex-shrink-0"
+                    style={{ 
+                      minWidth: `${Math.round(80 * settings.imageScale) + 20}px`,
+                    }}
                   >
                     <Link
                       to={category.href}
-                      className="group/item flex flex-col items-center gap-3 min-w-[80px]"
+                      className="group/item flex flex-col items-center gap-3"
                     >
                       {/* Icon Circle or Image */}
                       <div 
-                        className="relative rounded-full bg-[#f8f8f5] group-hover/item:bg-primary/10 border border-border/50 group-hover/item:border-primary/30 flex items-center justify-center transition-all duration-300 group-hover/item:shadow-lg overflow-hidden"
+                        className={`relative ${shapeClass} bg-[#f8f8f5] group-hover/item:bg-primary/10 border border-border/50 group-hover/item:border-primary/30 flex items-center justify-center transition-all duration-300 group-hover/item:shadow-lg overflow-hidden`}
                         style={{
                           width: `${Math.round(80 * settings.imageScale)}px`,
                           height: `${Math.round(80 * settings.imageScale)}px`,
-                          transform: 'translateY(0)',
                         }}
                       >
                         {category.image ? (
@@ -278,7 +293,7 @@ export const CategoriesGrid = () => {
                       </div>
                       
                       {/* Category Name */}
-                      <span className="text-xs md:text-sm font-medium text-foreground/80 group-hover/item:text-primary text-center transition-colors whitespace-nowrap">
+                      <span className="text-xs md:text-sm font-medium text-foreground/80 group-hover/item:text-primary text-center transition-colors whitespace-nowrap max-w-[90px] truncate">
                         {category.name}
                       </span>
                     </Link>
