@@ -30,7 +30,8 @@ import {
   Crown,
   LogOut,
   Search,
-  Bot
+  Bot,
+  RotateCcw
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -53,7 +54,8 @@ const mainNavItems: NavItem[] = [
   { id: "customers", label: "Customers", icon: UserCheck },
   { id: "blog", label: "Blog", icon: FileText },
   { id: "subscribers", label: "Subscribers", icon: MessageSquare },
-  { id: "requests", label: "Requests", icon: MessageSquare },
+  { id: "requests", label: "Custom Requests", icon: MessageSquare },
+  { id: "returns", label: "Returns", icon: RotateCcw },
 ];
 
 const contentNavItems: NavItem[] = [
