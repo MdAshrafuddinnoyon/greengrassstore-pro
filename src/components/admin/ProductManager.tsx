@@ -199,6 +199,12 @@ export const ProductManager = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  // Filters
+  const [filterCategory, setFilterCategory] = useState<string>("_all_");
+  const [filterSubcategory, setFilterSubcategory] = useState<string>("_all_");
+  const [filterProductType, setFilterProductType] = useState<string>("_all_");
+  const [filterStatus, setFilterStatus] = useState<string>("_all_");
+
   // Bulk Selection
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkCategory, setBulkCategory] = useState<string>("");
@@ -647,10 +653,31 @@ export const ProductManager = () => {
     setLastSelectedIndex(currentIndex);
   };
 
-  const filtered = products.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = products.filter(p => {
+    // Search filter
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.sku && p.sku.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    // Category filter
+    const matchesCategory = filterCategory === "_all_" || p.category === filterCategory;
+    
+    // Subcategory filter
+    const matchesSubcategory = filterSubcategory === "_all_" || p.subcategory === filterSubcategory;
+    
+    // Product type filter
+    const matchesProductType = filterProductType === "_all_" || p.product_type === filterProductType;
+    
+    // Status filter
+    const matchesStatus = filterStatus === "_all_" || 
+      (filterStatus === "active" && p.is_active) ||
+      (filterStatus === "inactive" && !p.is_active) ||
+      (filterStatus === "featured" && p.is_featured) ||
+      (filterStatus === "on_sale" && p.is_on_sale) ||
+      (filterStatus === "new" && p.is_new);
+    
+    return matchesSearch && matchesCategory && matchesSubcategory && matchesProductType && matchesStatus;
+  });
 
   // Pagination
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
@@ -727,7 +754,99 @@ export const ProductManager = () => {
               Add Product
             </Button>
           </div>
-        </div>
+            </div>
+
+            {/* Filter Bar */}
+            <div className="flex flex-wrap gap-3 p-3 bg-muted/30 rounded-lg border">
+              <div className="flex flex-col gap-1">
+                <Label className="text-xs text-muted-foreground">Category</Label>
+                <Select value={filterCategory} onValueChange={(v) => { setFilterCategory(v); setFilterSubcategory("_all_"); setCurrentPage(1); }}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all_">All Categories</SelectItem>
+                    {categories.filter(c => !c.parent_id).map(cat => (
+                      <SelectItem key={cat.id} value={cat.slug}>{cat.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {filterCategory !== "_all_" && (
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Subcategory</Label>
+                  <Select value={filterSubcategory} onValueChange={(v) => { setFilterSubcategory(v); setCurrentPage(1); }}>
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue placeholder="All Subcategories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_all_">All Subcategories</SelectItem>
+                      {categories.filter(c => {
+                        const parent = categories.find(p => p.slug === filterCategory);
+                        return parent && c.parent_id === parent.id;
+                      }).map(subcat => (
+                        <SelectItem key={subcat.id} value={subcat.slug}>{subcat.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-1">
+                <Label className="text-xs text-muted-foreground">Product Type</Label>
+                <Select value={filterProductType} onValueChange={(v) => { setFilterProductType(v); setCurrentPage(1); }}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="All Types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all_">All Types</SelectItem>
+                    <SelectItem value="simple">Simple</SelectItem>
+                    <SelectItem value="variable">Variable</SelectItem>
+                    <SelectItem value="digital">Digital</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <Label className="text-xs text-muted-foreground">Status</Label>
+                <Select value={filterStatus} onValueChange={(v) => { setFilterStatus(v); setCurrentPage(1); }}>
+                  <SelectTrigger className="w-[130px]">
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="_all_">All Status</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="featured">Featured</SelectItem>
+                    <SelectItem value="on_sale">On Sale</SelectItem>
+                    <SelectItem value="new">New</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {(filterCategory !== "_all_" || filterProductType !== "_all_" || filterStatus !== "_all_") && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="self-end"
+                  onClick={() => {
+                    setFilterCategory("_all_");
+                    setFilterSubcategory("_all_");
+                    setFilterProductType("_all_");
+                    setFilterStatus("_all_");
+                    setCurrentPage(1);
+                  }}
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Clear Filters
+                </Button>
+              )}
+              
+              <div className="ml-auto self-end text-xs text-muted-foreground">
+                {filtered.length} of {products.length} products
+              </div>
+            </div>
       </CardHeader>
       <CardContent>
         <Tabs value={mainTab} onValueChange={setMainTab} className="space-y-4">
